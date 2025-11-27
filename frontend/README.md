@@ -1,16 +1,116 @@
-# React + Vite
+# structuring of React-application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+chess-app/
+│
+├── frontend/                          # Frontend React Application
+│   ├── public/
+│   │   ├── assets/
+│   │   │   ├── pieces/             # Chess piece images/SVGs
+│   │   │   └── sounds/             # Move sounds, captures, etc.
+│   │   └── index.html
+│   │
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   │   ├── Button.jsx
+│   │   │   │   ├── Modal.jsx
+│   │   │   │   ├── Avatar.jsx
+│   │   │   │   ├── Loader.jsx
+│   │   │   │   └── Toast.jsx
+│   │   │   │
+│   │   │   ├── layout/
+│   │   │   │   ├── Navbar.jsx
+│   │   │   │   ├── Sidebar.jsx
+│   │   │   │   └── Footer.jsx
+│   │   │   │
+│   │   │   ├── chess/
+│   │   │   │   ├── ChessBoard.jsx          # Main board component
+│   │   │   │   ├── Square.jsx              # Individual square
+│   │   │   │   ├── Piece.jsx               # Chess piece component
+│   │   │   │   ├── MoveHistory.jsx         # Move list display
+│   │   │   │   ├── CapturedPieces.jsx      # Captured pieces display
+│   │   │   │   ├── GameControls.jsx        # Resign, draw, etc.
+│   │   │   │   ├── PromotionModal.jsx      # Pawn promotion UI
+│   │   │   │   └── GameClock.jsx           # Timer display
+│   │   │   │
+│   │   │   ├── lobby/
+│   │   │   │   ├── LobbyCard.jsx           # Individual lobby card
+│   │   │   │   ├── LobbyList.jsx           # List of lobbies
+│   │   │   │   ├── CreateLobbyModal.jsx    # Create lobby form
+│   │   │   │   └── LobbySettings.jsx       # Tournament settings
+│   │   │   │
+│   │   │   ├── tournament/
+│   │   │   │   ├── TournamentBracket.jsx   # Bracket visualization
+│   │   │   │   ├── TournamentStandings.jsx # Current standings
+│   │   │   │   ├── TournamentInfo.jsx      # Tournament details
+│   │   │   │   └── MatchCard.jsx           # Individual match display
+│   │   │   │
+│   │   │   ├── profile/
+│   │   │   │   ├── UserProfile.jsx         # User profile page
+│   │   │   │   ├── ProfileStats.jsx        # Statistics display
+│   │   │   │   ├── MatchHistory.jsx        # Past games
+│   │   │   │   ├── FriendsList.jsx         # Friends management
+│   │   │   │   └── EditProfile.jsx         # Profile editor
+│   │   │   │
+│   │   │   ├── spectate/
+│   │   │   │   ├── SpectatorView.jsx       # Watch game UI
+│   │   │   │   ├── GamesList.jsx           # Live games list
+│   │   │   │   ├── Chat.jsx                # Spectator chat
+│   │   │   │   └── ViewerCount.jsx         # Number of viewers
+│   │   │   │
+│   │   │   └── social/
+│   │   │       ├── FriendSearch.jsx        # Search for friends
+│   │   │       ├── FriendRequest.jsx       # Friend request UI
+│   │   │       ├── ChatBox.jsx             # Direct messaging
+│   │   │       └── Notifications.jsx       # Notification center
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Home.jsx                    # Landing page
+│   │   │   ├── Game.jsx                    # Active game page
+│   │   │   ├── Lobby.jsx                   # Lobby/Tournament page
+│   │   │   ├── Profile.jsx                 # User profile page
+│   │   │   ├── Spectate.jsx                # Spectator page
+│   │   │   ├── Friends.jsx                 # Friends management
+│   │   │   ├── Login.jsx                   # Authentication
+│   │   │   ├── Register.jsx                # User registration
+│   │   │   └── NotFound.jsx                # 404 page
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useChessGame.js             # Game state management
+│   │   │   ├── useWebSocket.js             # WebSocket connection
+│   │   │   ├── useAuth.js                  # Authentication
+│   │   │   ├── useTournament.js            # Tournament logic
+│   │   │   ├── useTimer.js                 # Game clock
+│   │   │   └── useSound.js                 # Sound effects
+│   │   │
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx             # User authentication
+│   │   │   ├── GameContext.jsx             # Global game state
+│   │   │   ├── SocketContext.jsx           # WebSocket provider
+│   │   │   └── ThemeContext.jsx            # Theme management
+│   │   │
+│   │   ├── services/
+│   │   │   ├── api.js                      # API client setup
+│   │   │   ├── authService.js              # Auth API calls
+│   │   │   ├── gameService.js              # Game API calls
+│   │   │   ├── tournamentService.js        # Tournament API
+│   │   │   ├── userService.js              # User API calls
+│   │   │   └── socketService.js            # WebSocket handlers
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── constants.js                # App constants
+│   │   │   ├── helpers.js                  # Utility functions
+│   │   │   └── validators.js               # Input validation
+│   │   │
+│   │   ├── styles/
+│   │   │   ├── globals.css                 # Global styles
+│   │   │   ├── chessboard.css              # Board styles
+│   │   │   └── animations.css              # Animations
+│   │   │
+│   │   ├── App.jsx                         # Root component
+│   │   ├── main.jsx                        # Entry point
+│   │   └── router.jsx                      # Route configuration
+│   │
+│   ├── package.json
+│   ├── vite.config.js
+│   └── tailwind.config.js
