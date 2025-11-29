@@ -4,6 +4,7 @@ import Navbar from './components/layout/NavBar'
 import Sidebar from './components/layout/Sidebar'
 import Footer from './components/layout/Footer'
 import Register from "./pages/Register";
+import Login from "./pages/Login"
 
 import Home from './pages/Home'
 
@@ -17,6 +18,7 @@ function AppRouter() {
                     <Routes>
                         <Route path="/" element={<Home/>} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/login" element={<Login />} />
                     </Routes>
                 </main>
             </div>
