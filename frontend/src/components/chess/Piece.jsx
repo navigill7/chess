@@ -25,7 +25,7 @@ function Piece({ type, color, isDraggable }) {
     },
   };
 
-  const pieceUrl = placeImages[color]?.[type];
+  const pieceUrl = pieceImages[color]?.[type];
 
   if (!pieceUrl) return null;
 
