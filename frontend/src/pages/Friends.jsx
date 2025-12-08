@@ -1,4 +1,3 @@
-// frontend/src/pages/Friends.jsx
 import React, { useState, useEffect } from 'react';
 import { Search, UserPlus, MessageCircle, Swords, Users, Clock } from 'lucide-react';
 import api from '../services/api';
