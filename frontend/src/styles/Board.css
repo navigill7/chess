@@ -1,0 +1,205 @@
+/* ChessBoard Container - Enforce Square Aspect Ratio */
+.chess-board-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Aspect ratio box trick - maintains 1:1 square */
+.chess-board-container::before {
+  content: '';
+  display: block;
+  padding-top: 100%; /* 1:1 Aspect Ratio */
+}
+
+.chess-board-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Board itself with coordinates */
+.chess-board {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border: 2px solid #1a1714;
+  background: #312e2b;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Each square must maintain equal width/height */
+.chess-square {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+/* Light and dark squares */
+.chess-square.light {
+  background-color: #f0d9b5;
+}
+
+.chess-square.dark {
+  background-color: #b58863;
+}
+
+/* Square states */
+.chess-square.selected {
+  background-color: rgba(251, 191, 36, 0.6) !important;
+  box-shadow: inset 0 0 0 3px #fbbf24;
+}
+
+.chess-square.last-move {
+  background-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+.chess-square.in-check {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.8) 0%, rgba(220, 38, 38, 0.4) 100%) !important;
+  animation: check-pulse 1s ease-in-out infinite;
+}
+
+/* Valid move indicators */
+.chess-square.valid-move::after {
+  content: '';
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.chess-square.valid-capture::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 4px solid rgba(34, 197, 94, 0.7);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Piece container - always centered */
+.chess-piece {
+  width: 85%;
+  height: 85%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  position: relative;
+  z-index: 10;
+  cursor: inherit;
+}
+
+.chess-piece img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Coordinate labels */
+.rank-label,
+.file-label {
+  position: absolute;
+  font-weight: bold;
+  font-size: clamp(10px, 1.5vw, 14px);
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.rank-label {
+  left: 4px;
+  top: 4px;
+}
+
+.file-label {
+  right: 4px;
+  bottom: 4px;
+}
+
+/* Color labels based on square color */
+.chess-square.light .rank-label,
+.chess-square.light .file-label {
+  color: #b58863;
+}
+
+.chess-square.dark .rank-label,
+.chess-square.dark .file-label {
+  color: #f0d9b5;
+}
+
+/* Hover effects */
+.chess-square:not(.disabled):hover {
+  filter: brightness(0.95);
+}
+
+.chess-square.disabled {
+  cursor: not-allowed;
+}
+
+/* Animations */
+@keyframes check-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .chess-board-container {
+    max-width: 90vw;
+  }
+  
+  .chess-board-wrapper {
+    padding: 0.5rem;
+  }
+  
+  .rank-label,
+  .file-label {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chess-board-container {
+    max-width: 95vw;
+  }
+  
+  .chess-board-wrapper {
+    padding: 0.25rem;
+  }
+  
+  .rank-label,
+  .file-label {
+    font-size: 8px;
+    left: 2px;
+    top: 2px;
+    right: 2px;
+    bottom: 2px;
+  }
+}

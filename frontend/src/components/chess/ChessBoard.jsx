@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../styles/Board.css"; // Import the CSS file
+import "../../styles/Board.css";
 
 function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves }) {
   const [selectedSquare, setSelectedSquare] = useState(null);
