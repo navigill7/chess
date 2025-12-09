@@ -1,16 +1,22 @@
 import React, { useRef, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 function MoveHistory({ moves, currentMoveIndex, onMoveClick }) {
   const movesEndRef = useRef(null);
+  const activeRef = useRef(null);
 
   useEffect(() => {
-    movesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [moves]);
+    if (currentMoveIndex === moves.length - 1) {
+      movesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else if (activeRef.current) {
+      activeRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [currentMoveIndex, moves.length]);
 
-  const formatMove = (move, index) => {
-    // Convert move to standard chess notation
-    // This is simplified - you'd need proper chess notation logic
-    return move.notation || `${move.from}-${move.to}`;
+  const formatMove = (move) => {
+    // Use provided notation or construct simple notation
+    if (move.notation) return move.notation;
+    return `${move.from}-${move.to}`;
   };
 
   const movePairs = [];
@@ -18,54 +24,84 @@ function MoveHistory({ moves, currentMoveIndex, onMoveClick }) {
     movePairs.push({
       number: Math.floor(i / 2) + 1,
       white: moves[i],
+      whiteIndex: i,
       black: moves[i + 1],
+      blackIndex: i + 1,
     });
   }
 
+  const handleFirst = () => {
+    if (moves.length > 0) {
+      onMoveClick(0);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentMoveIndex > 0) {
+      onMoveClick(currentMoveIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentMoveIndex < moves.length - 1) {
+      onMoveClick(currentMoveIndex + 1);
+    }
+  };
+
+  const handleLast = () => {
+    if (moves.length > 0) {
+      onMoveClick(moves.length - 1);
+    }
+  };
+
   return (
-    <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 p-4">
+    <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 p-4 flex flex-col h-full">
       <h3 className="text-white font-semibold mb-3">Move History</h3>
       
-      <div className="max-h-96 overflow-y-auto space-y-1">
+      <div className="flex-1 overflow-y-auto space-y-1 mb-3 min-h-0">
         {movePairs.length === 0 ? (
           <p className="text-white/40 text-sm text-center py-8">No moves yet</p>
         ) : (
           movePairs.map((pair, idx) => (
             <div
               key={idx}
-              className="grid grid-cols-[40px_1fr_1fr] gap-2 text-sm hover:bg-white/5 rounded p-1 transition-colors"
+              className="grid grid-cols-[40px_1fr_1fr] gap-2 text-sm"
             >
               {/* Move Number */}
-              <span className="text-white/40 font-semibold">{pair.number}.</span>
+              <span className="text-white/40 font-semibold self-center">{pair.number}.</span>
               
               {/* White's Move */}
               <button
-                onClick={() => onMoveClick(idx * 2)}
+                ref={currentMoveIndex === pair.whiteIndex ? activeRef : null}
+                onClick={() => onMoveClick(pair.whiteIndex)}
                 className={`
                   text-left px-2 py-1 rounded transition-colors
-                  ${currentMoveIndex === idx * 2
-                    ? 'bg-purple-600/50 text-white font-semibold'
+                  ${currentMoveIndex === pair.whiteIndex
+                    ? 'bg-purple-600/50 text-white font-semibold ring-2 ring-purple-400'
                     : 'text-white/80 hover:bg-white/10'
                   }
                 `}
               >
-                {formatMove(pair.white, idx * 2)}
+                {formatMove(pair.white)}
               </button>
               
               {/* Black's Move */}
-              {pair.black && (
+              {pair.black ? (
                 <button
-                  onClick={() => onMoveClick(idx * 2 + 1)}
+                  ref={currentMoveIndex === pair.blackIndex ? activeRef : null}
+                  onClick={() => onMoveClick(pair.blackIndex)}
                   className={`
                     text-left px-2 py-1 rounded transition-colors
-                    ${currentMoveIndex === idx * 2 + 1
-                      ? 'bg-purple-600/50 text-white font-semibold'
+                    ${currentMoveIndex === pair.blackIndex
+                      ? 'bg-purple-600/50 text-white font-semibold ring-2 ring-purple-400'
                       : 'text-white/80 hover:bg-white/10'
                     }
                   `}
                 >
-                  {formatMove(pair.black, idx * 2 + 1)}
+                  {formatMove(pair.black)}
                 </button>
+              ) : (
+                <div />
               )}
             </div>
           ))
@@ -75,35 +111,46 @@ function MoveHistory({ moves, currentMoveIndex, onMoveClick }) {
 
       {/* Navigation Buttons */}
       {moves.length > 0 && (
-        <div className="flex justify-between mt-4 pt-4 border-t border-white/10">
+        <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/10">
           <button
-            onClick={() => onMoveClick(0)}
+            onClick={handleFirst}
             disabled={currentMoveIndex === 0}
-            className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white/80 text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center p-2 rounded bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="First move"
           >
-            ⏮ Start
+            <ChevronsLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onMoveClick(Math.max(0, currentMoveIndex - 1))}
+            onClick={handlePrev}
             disabled={currentMoveIndex === 0}
-            className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white/80 text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center p-2 rounded bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Previous move"
           >
-            ◀ Prev
+            <ChevronLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onMoveClick(Math.min(moves.length - 1, currentMoveIndex + 1))}
+            onClick={handleNext}
             disabled={currentMoveIndex === moves.length - 1}
-            className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white/80 text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center p-2 rounded bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Next move"
           >
-            Next ▶
+            <ChevronRight className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onMoveClick(moves.length - 1)}
+            onClick={handleLast}
             disabled={currentMoveIndex === moves.length - 1}
-            className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white/80 text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center p-2 rounded bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Last move"
           >
-            End ⏭
+            <ChevronsRight className="w-4 h-4" />
           </button>
+        </div>
+      )}
+      
+      {/* Current position indicator */}
+      {moves.length > 0 && (
+        <div className="text-center text-white/60 text-xs mt-2">
+          Position: {currentMoveIndex + 1} / {moves.length}
         </div>
       )}
     </div>

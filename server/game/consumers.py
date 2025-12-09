@@ -1,159 +1,16 @@
-import json
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
-from .models import Game, Move, MatchmakingQueue
-from accounts.models import User
-from .chess_engine import ChessEngine
-
-
-class MatchmakingConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
-        self.user = None
-        self.queue_entry = None
-    
-    async def disconnect(self, close_code):
-        if self.queue_entry:
-            await self.leave_queue()
-    
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        action = data.get('action')
-        
-        if action == 'join_queue':
-            await self.join_queue(data)
-        elif action == 'leave_queue':
-            await self.leave_queue()
-    
-    async def join_queue(self, data):
-        user_id = data.get('user_id')
-        time_control = data.get('time_control')
-        rating = data.get('rating', 1200)
-        
-        # Get user
-        self.user = await self.get_user(user_id)
-        if not self.user:
-            await self.send(json.dumps({
-                'type': 'error',
-                'message': 'Invalid user'
-            }))
-            return
-        
-        # Add to queue
-        self.queue_entry = await self.add_to_queue(self.user, time_control, rating)
-        
-        # Get queue position
-        position, total = await self.get_queue_stats(time_control)
-        
-        await self.send(json.dumps({
-            'type': 'queue_joined',
-            'position': position,
-            'total_players': total,
-            'estimated_wait': self.calculate_wait_time(position)
-        }))
-        
-        # Try to find match
-        await self.try_match(time_control, rating)
-    
-    async def try_match(self, time_control, rating):
-        # Find suitable opponent (within 200 rating points)
-        opponent_entry = await self.find_opponent(time_control, rating, self.user.id)
-        
-        if opponent_entry:
-            # Create game
-            game = await self.create_game(self.user, opponent_entry.user, time_control)
-            
-            # Remove both from queue
-            await self.remove_from_queue(self.queue_entry)
-            await self.remove_from_queue(opponent_entry)
-            
-            # Send match found to both players
-            await self.send(json.dumps({
-                'type': 'match_found',
-                'game_id': game.game_id,
-                'opponent': opponent_entry.user.username,
-                'color': 'white' if game.white_player == self.user else 'black'
-            }))
-            
-            # Note: We'd need to store WebSocket connections to send to opponent
-            # This is simplified - in production, use channel layers
-    
-    async def leave_queue(self):
-        if self.queue_entry:
-            await self.remove_from_queue(self.queue_entry)
-            await self.send(json.dumps({
-                'type': 'queue_left'
-            }))
-    
-    @database_sync_to_async
-    def get_user(self, user_id):
-        try:
-            return User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return None
-    
-    @database_sync_to_async
-    def add_to_queue(self, user, time_control, rating):
-        return MatchmakingQueue.objects.create(
-            user=user,
-            time_control=time_control,
-            rating=rating
-        )
-    
-    @database_sync_to_async
-    def remove_from_queue(self, queue_entry):
-        queue_entry.delete()
-    
-    @database_sync_to_async
-    def get_queue_stats(self, time_control):
-        entries = MatchmakingQueue.objects.filter(time_control=time_control)
-        total = entries.count()
-        position = list(entries.values_list('id', flat=True)).index(self.queue_entry.id) + 1
-        return position, total
-    
-    @database_sync_to_async
-    def find_opponent(self, time_control, rating, exclude_user_id):
-        return MatchmakingQueue.objects.filter(
-            time_control=time_control,
-            rating__gte=rating - 200,
-            rating__lte=rating + 200
-        ).exclude(user_id=exclude_user_id).first()
-    
-    @database_sync_to_async
-    def create_game(self, white_player, black_player, time_control):
-        # Parse time control
-        parts = time_control.split('+')
-        initial_time = int(parts[0]) * 60  # convert to seconds
-        increment = int(parts[1]) if len(parts) > 1 else 0
-        
-        game = Game.objects.create(
-            game_id=Game.generate_game_id(),
-            white_player=white_player,
-            black_player=black_player,
-            time_control=time_control,
-            initial_time=initial_time,
-            increment=increment,
-            white_time_left=initial_time * 1000,  # milliseconds
-            black_time_left=initial_time * 1000,
-            status='ongoing',
-            started_at=timezone.now(),
-            white_rating_before=white_player.rating,
-            black_rating_before=black_player.rating
-        )
-        return game
-    
-    def calculate_wait_time(self, position):
-        # Estimate: ~10 seconds per position
-        return position * 10
-
+import json
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.game_id = self.scope['url_route']['kwargs']['game_id']
         self.room_group_name = f'game_{self.game_id}'
+        self.clock_task = None
+        self.last_clock_update = None
         
-        # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -162,7 +19,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.accept()
     
     async def disconnect(self, close_code):
-        # Leave room group
+        # Cancel clock sync task
+        if self.clock_task:
+            self.clock_task.cancel()
+        
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -170,18 +30,23 @@ class GameConsumer(AsyncWebsocketConsumer):
     
     async def receive(self, text_data):
         data = json.loads(text_data)
-        action = data.get('action')
+        msg_type = data.get('type')
+        payload = data.get('payload', {})
         
-        if action == 'join_game':
+        if msg_type == 'join_game':
             await self.join_game()
-        elif action == 'make_move':
-            await self.make_move(data)
-        elif action == 'resign':
+        elif msg_type == 'move':
+            await self.make_move(payload)
+        elif msg_type == 'chat':
+            await self.handle_chat(payload)
+        elif msg_type == 'jump_to_move':
+            await self.jump_to_move(payload)
+        elif msg_type == 'clock_request':
+            await self.send_clock_sync()
+        elif msg_type == 'resign':
             await self.resign()
-        elif action == 'offer_draw':
+        elif msg_type == 'offer_draw':
             await self.offer_draw()
-        elif action == 'request_takeback':
-            await self.request_takeback()
     
     async def join_game(self):
         game = await self.get_game()
@@ -217,15 +82,75 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'from': m.from_square,
                     'to': m.to_square,
                     'notation': m.algebraic_notation,
-                    'color': m.color
+                    'color': m.color,
+                    'piece': m.piece,
+                    'captured': m.captured_piece,
                 } for m in moves
-            ]
+            ],
+            'current_turn': game.current_turn,
         }))
+        
+        # Start clock sync if game is ongoing
+        if game.status == 'ongoing':
+            self.clock_task = asyncio.create_task(self.clock_sync_loop())
     
-    async def make_move(self, data):
-        from_square = data.get('from')
-        to_square = data.get('to')
-        promotion = data.get('promotion')
+    async def clock_sync_loop(self):
+        """Send clock updates every 1 second"""
+        try:
+            while True:
+                await asyncio.sleep(1)
+                game = await self.get_game()
+                
+                if not game or game.status != 'ongoing':
+                    break
+                
+                # Calculate time elapsed since last update
+                now = timezone.now()
+                if self.last_clock_update and game.current_turn:
+                    elapsed_ms = int((now - self.last_clock_update).total_seconds() * 1000)
+                    
+                    # Deduct time from current player
+                    if game.current_turn == 'white':
+                        game.white_time_left = max(0, game.white_time_left - elapsed_ms)
+                        if game.white_time_left == 0:
+                            await self.time_forfeit('white')
+                            break
+                    else:
+                        game.black_time_left = max(0, game.black_time_left - elapsed_ms)
+                        if game.black_time_left == 0:
+                            await self.time_forfeit('black')
+                            break
+                    
+                    await self.save_game_time(game)
+                
+                self.last_clock_update = now
+                
+                # Broadcast clock sync
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'clock_sync_broadcast',
+                        'white_time': game.white_time_left,
+                        'black_time': game.black_time_left,
+                    }
+                )
+        except asyncio.CancelledError:
+            pass
+    
+    async def send_clock_sync(self):
+        """Send immediate clock sync"""
+        game = await self.get_game()
+        if game:
+            await self.send(json.dumps({
+                'type': 'clock_sync',
+                'white_time': game.white_time_left,
+                'black_time': game.black_time_left,
+            }))
+    
+    async def make_move(self, payload):
+        from_square = payload.get('from')
+        to_square = payload.get('to')
+        promotion = payload.get('promotion')
         
         game = await self.get_game()
         if not game or game.status != 'ongoing':
@@ -235,8 +160,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
             return
         
-        # Validate move using chess engine
+        # Validate and execute move
+        from game.chess_engine import ChessEngine
         engine = ChessEngine(game.current_fen)
+        
         if not engine.is_valid_move(from_square, to_square, promotion):
             await self.send(json.dumps({
                 'type': 'error',
@@ -244,95 +171,170 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
             return
         
-        # Execute move
         result = engine.make_move(from_square, to_square, promotion)
         
-        # Save move to database
-        move = await self.save_move(
-            game,
-            from_square,
-            to_square,
-            result['piece'],
-            result.get('captured'),
-            promotion,
-            result.get('notation'),
-            result['fen'],
-            result.get('is_check', False),
-            result.get('is_checkmate', False)
-        )
+        # Add increment to moving player's clock
+        if game.current_turn == 'white':
+            game.white_time_left += game.increment * 1000
+        else:
+            game.black_time_left += game.increment * 1000
+        
+        # Save move
+        move = await self.save_move(game, from_square, to_square, result)
         
         # Update game
         await self.update_game(game, result['fen'], result.get('status'))
         
-        # Broadcast move to all players
+        # Reset clock update timestamp
+        self.last_clock_update = timezone.now()
+        
+        # Broadcast move with clock times
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'game_move',
+                'type': 'game_move_broadcast',
                 'move': {
                     'from': from_square,
                     'to': to_square,
                     'notation': result['notation'],
                     'piece': result['piece'],
                     'captured': result.get('captured'),
-                    'color': game.current_turn,
-                    'fen': result['fen'],
-                    'check': result.get('is_check', False),
-                    'checkmate': result.get('is_checkmate', False)
-                }
+                    'color': 'white' if game.current_turn == 'black' else 'black',
+                    'is_check': result.get('is_check', False),
+                    'is_checkmate': result.get('is_checkmate', False),
+                    'status': result.get('status', 'ongoing'),
+                    'winner': result.get('winner'),
+                },
+                'fen': result['fen'],
+                'white_time': game.white_time_left,
+                'black_time': game.black_time_left,
             }
         )
-        
-        # Check game end
-        if result.get('status') and result['status'] != 'ongoing':
-            await self.end_game(game, result['status'], result.get('winner'))
     
-    async def resign(self):
-        game = await self.get_game()
-        # Determine winner (opponent of player who resigned)
-        # Implementation here
-        pass
-    
-    async def offer_draw(self):
-        # Send draw offer to opponent
+    async def handle_chat(self, payload):
+        """Broadcast chat message to all players in game"""
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'draw_offered'
+                'type': 'chat_broadcast',
+                'message': {
+                    'id': payload.get('timestamp', str(timezone.now().timestamp())),
+                    'user': payload.get('user'),
+                    'text': payload.get('text'),
+                    'timestamp': payload.get('timestamp'),
+                    'is_system': payload.get('is_system', False),
+                }
             }
         )
     
-    async def request_takeback(self):
-        # Send takeback request
-        pass
+    async def jump_to_move(self, payload):
+        """Send state snapshot at specific move index"""
+        move_index = payload.get('move_index', -1)
+        game = await self.get_game()
+        moves = await self.get_moves()
+        
+        if move_index < 0 or move_index >= len(moves):
+            # Return current state
+            await self.send(json.dumps({
+                'type': 'state_snapshot',
+                'fen': game.current_fen,
+                'white_time': game.white_time_left,
+                'black_time': game.black_time_left,
+                'move_index': len(moves) - 1,
+                'check': None,
+                'last_move': None,
+            }))
+            return
+        
+        # Get FEN at that move
+        target_move = moves[move_index]
+        
+        await self.send(json.dumps({
+            'type': 'state_snapshot',
+            'fen': target_move.fen_after,
+            'white_time': target_move.time_left if target_move.color == 'white' else game.white_time_left,
+            'black_time': target_move.time_left if target_move.color == 'black' else game.black_time_left,
+            'move_index': move_index,
+            'check': target_move.is_check,
+            'last_move': {
+                'from': target_move.from_square,
+                'to': target_move.to_square,
+            },
+        }))
     
-    # Message handlers
-    async def game_move(self, event):
+    async def time_forfeit(self, color):
+        """Handle time forfeit"""
+        game = await self.get_game()
+        winner = 'black' if color == 'white' else 'white'
+        
+        game.status = 'completed'
+        game.winner = game.black_player if winner == 'black' else game.white_player
+        game.result = '0-1' if winner == 'black' else '1-0'
+        game.termination = 'time'
+        game.ended_at = timezone.now()
+        await self.save_game(game)
+        
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'game_ended_broadcast',
+                'status': 'completed',
+                'winner': winner,
+                'termination': 'time',
+            }
+        )
+    
+    # Message broadcast handlers
+    async def game_move_broadcast(self, event):
         await self.send(json.dumps({
             'type': 'move_made',
-            'move': event['move']
+            'move': event['move'],
+            'fen': event['fen'],
+            'white_time': event['white_time'],
+            'black_time': event['black_time'],
         }))
     
-    async def draw_offered(self, event):
+    async def clock_sync_broadcast(self, event):
         await self.send(json.dumps({
-            'type': 'draw_offered'
+            'type': 'clock_sync',
+            'white_time': event['white_time'],
+            'black_time': event['black_time'],
         }))
     
+    async def chat_broadcast(self, event):
+        await self.send(json.dumps({
+            'type': 'chat_message',
+            'message': event['message'],
+        }))
+    
+    async def game_ended_broadcast(self, event):
+        await self.send(json.dumps({
+            'type': 'game_ended',
+            'status': event['status'],
+            'winner': event.get('winner'),
+            'termination': event.get('termination'),
+        }))
+    
+    # Database operations
     @database_sync_to_async
     def get_game(self):
+        from .models import Game
         try:
-            return Game.objects.get(game_id=self.game_id)
+            return Game.objects.select_related('white_player', 'black_player').get(game_id=self.game_id)
         except Game.DoesNotExist:
             return None
     
     @database_sync_to_async
     def get_moves(self):
+        from .models import Move
         return list(Move.objects.filter(game_id=self.game_id).order_by('move_number', 'id'))
     
     @database_sync_to_async
-    def save_move(self, game, from_sq, to_sq, piece, captured, promotion, notation, fen, is_check, is_checkmate):
+    def save_move(self, game, from_sq, to_sq, result):
+        from .models import Move
         move_num = (game.move_count // 2) + 1
         color = 'white' if game.move_count % 2 == 0 else 'black'
+        time_left = game.white_time_left if color == 'white' else game.black_time_left
         
         return Move.objects.create(
             game=game,
@@ -340,15 +342,15 @@ class GameConsumer(AsyncWebsocketConsumer):
             color=color,
             from_square=from_sq,
             to_square=to_sq,
-            piece=piece,
-            captured_piece=captured or '',
-            promotion=promotion or '',
-            algebraic_notation=notation,
-            fen_after=fen,
-            is_check=is_check,
-            is_checkmate=is_checkmate,
-            time_spent=0,  # Calculate from timer
-            time_left=0    # Get from game state
+            piece=result['piece'],
+            captured_piece=result.get('captured', ''),
+            promotion=result.get('promotion', ''),
+            algebraic_notation=result['notation'],
+            fen_after=result['fen'],
+            is_check=result.get('is_check', False),
+            is_checkmate=result.get('is_checkmate', False),
+            time_spent=0,
+            time_left=time_left,
         )
     
     @database_sync_to_async
@@ -356,17 +358,15 @@ class GameConsumer(AsyncWebsocketConsumer):
         game.current_fen = fen
         game.move_count += 1
         game.current_turn = 'black' if game.current_turn == 'white' else 'white'
-        if status:
+        if status and status != 'ongoing':
             game.status = status
+            game.ended_at = timezone.now()
         game.save()
     
     @database_sync_to_async
-    def end_game(self, game, status, winner):
-        game.status = 'completed'
-        game.ended_at = timezone.now()
-        if winner:
-            game.winner = winner
-            game.result = '1-0' if winner == game.white_player else '0-1'
-        else:
-            game.result = '1/2-1/2'
+    def save_game_time(self, game):
+        game.save(update_fields=['white_time_left', 'black_time_left'])
+    
+    @database_sync_to_async
+    def save_game(self, game):
         game.save()
