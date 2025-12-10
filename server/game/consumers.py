@@ -1,8 +1,9 @@
 import asyncio
+import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
-import json
+
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -262,6 +263,17 @@ class GameConsumer(AsyncWebsocketConsumer):
             },
         }))
     
+    async def resign(self):
+        """Handle resignation"""
+        game = await self.get_game()
+        # TODO: Implement resign logic
+        pass
+    
+    async def offer_draw(self):
+        """Handle draw offer"""
+        # TODO: Implement draw offer logic
+        pass
+    
     async def time_forfeit(self, color):
         """Handle time forfeit"""
         game = await self.get_game()
@@ -370,3 +382,35 @@ class GameConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_game(self, game):
         game.save()
+
+
+class MatchmakingConsumer(AsyncWebsocketConsumer):
+    """Matchmaking WebSocket consumer for pairing players"""
+    
+    async def connect(self):
+        await self.accept()
+        await self.send(json.dumps({
+            'type': 'info',
+            'message': 'Matchmaking service connected. Use friend challenges for now.'
+        }))
+    
+    async def disconnect(self, close_code):
+        pass
+    
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        action = data.get('action')
+        
+        if action == 'join_queue':
+            # TODO: Implement matchmaking queue logic
+            await self.send(json.dumps({
+                'type': 'queue_joined',
+                'position': 1,
+                'total_players': 1,
+                'message': 'Matchmaking is under development. Please use friend challenges.'
+            }))
+        elif action == 'leave_queue':
+            await self.send(json.dumps({
+                'type': 'info',
+                'message': 'Left matchmaking queue'
+            }))
