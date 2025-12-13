@@ -372,21 +372,23 @@ function Game() {
         </div>
 
         {/* Center - Chess Board */}
-        <div className="flex flex-col items-center justify-center">
-          <ChessBoard
-            gameState={{
-              board: board.board,
-              turn: board.turn,
-              check: gameState.check,
-              status: gameState.status,
-              winner: gameState.winner,
-              lastMove: moves[moves.length - 1],
-            }}
-            onMove={handleMove}
-            isSpectator={isSpectator}
-            playerColor={playerColor || 'white'}
-            getValidMoves={getValidMoves}
-          />
+        <div className="flex items-center justify-center min-h-0 h-full">
+          <div className="w-full h-full max-w-[min(90vh,90vw)] max-h-[min(90vh,90vw)]">
+            <ChessBoard
+              gameState={{
+                board: board.board,
+                turn: board.turn,
+                check: gameState.check,
+                status: gameState.status,
+                winner: gameState.winner,
+                lastMove: moves[moves.length - 1],
+              }}
+              onMove={handleMove}
+              isSpectator={isSpectator}
+              playerColor={playerColor || 'white'}
+              getValidMoves={getValidMoves}
+            />
+          </div>
         </div>
 
         {/* Right Sidebar - Move History & Chat */}

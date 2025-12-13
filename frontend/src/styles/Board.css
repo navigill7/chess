@@ -1,9 +1,12 @@
 /* ChessBoard Container - Enforce Square Aspect Ratio */
 .chess-board-container {
   width: 100%;
-  max-width: 600px;
+  height: 100%;
+  max-width: min(80vh, 90vw); /* Responsive to viewport */
+  max-height: min(80vh, 90vw);
   margin: 0 auto;
   position: relative;
+  aspect-ratio: 1 / 1; /* Force square */
 }
 
 /* Aspect ratio box trick - maintains 1:1 square */

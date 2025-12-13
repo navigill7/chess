@@ -5,10 +5,6 @@ function GameClock({ initialTime, increment, isActive, color, playerName, player
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
-    setTimeLeft(initialTime);
-  }, [initialTime]);
-
-  useEffect(() => {
     if (!isActive || timeLeft <= 0) return;
 
     const timer = setInterval(() => {

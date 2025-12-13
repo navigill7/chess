@@ -206,20 +206,33 @@ class GameClockManager:
                 'black_time': game.black_time_left,
             }))
     
-    async def make_move(self, payload):
-        from_square = payload.get('from')
-        to_square = payload.get('to')
-        promotion = payload.get('promotion')
-        
-        game = await self.get_game()
-        if not game or game.status != 'ongoing':
-            await self.send(json.dumps({
-                'type': 'error',
-                'message': 'Invalid game state'
-            }))
-            return
-        
-        # Validate and execute move
+async def make_move(self, payload):
+    from .events import MoveMadeEvent
+    from django.utils import timezone as tz
+    
+    game = await self.get_game()
+    if not game or game.status != 'ongoing':
+        await self.send(json.dumps({
+            'type': 'error',
+            'message': 'Invalid game state'
+        }))
+        return
+    
+    from_square = payload.get('from')
+    to_square = payload.get('to')
+    promotion = payload.get('promotion')
+    
+    # LOCK game for move validation
+    lock_acquired = await self.acquire_move_lock(game.game_id)
+    if not lock_acquired:
+        await self.send(json.dumps({
+            'type': 'error',
+            'message': 'Move in progress, try again'
+        }))
+        return
+    
+    try:
+        # Validate
         from game.chess_engine import ChessEngine
         engine = ChessEngine(game.current_fen)
         
@@ -232,7 +245,7 @@ class GameClockManager:
         
         result = engine.make_move(from_square, to_square, promotion)
         
-        # Add increment to moving player's clock
+        # Add increment
         if game.current_turn == 'white':
             game.white_time_left += game.increment * 1000
         else:
@@ -240,35 +253,67 @@ class GameClockManager:
         
         # Save move
         move = await self.save_move(game, from_square, to_square, result)
-        
-        # Update game
         await self.update_game(game, result['fen'], result.get('status'))
         
-        # Reset clock update timestamp
-        self.last_clock_update = timezone.now()
+        # CREATE EVENT
+        event = MoveMadeEvent(
+            game_id=game.game_id,
+            timestamp=tz.now(),
+            sequence=game.move_count,
+            payload=result,
+            from_square=from_square,
+            to_square=to_square,
+            piece=result['piece'],
+            captured=result.get('captured'),
+            notation=result['notation'],
+            fen_after=result['fen'],
+            color='white' if game.current_turn == 'black' else 'black'
+        )
         
-        # Broadcast move with clock times
+        # BROADCAST EVENT
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'game_move_broadcast',
-                'move': {
-                    'from': from_square,
-                    'to': to_square,
-                    'notation': result['notation'],
-                    'piece': result['piece'],
-                    'captured': result.get('captured'),
-                    'color': 'white' if game.current_turn == 'black' else 'black',
-                    'is_check': result.get('is_check', False),
-                    'is_checkmate': result.get('is_checkmate', False),
+                'type': 'move_made_event',
+                'event': {
+                    'event_type': 'MoveMade',
+                    'sequence': event.sequence,
+                    'timestamp': event.timestamp.isoformat(),
+                    'from': event.from_square,
+                    'to': event.to_square,
+                    'notation': event.notation,
+                    'piece': event.piece,
+                    'captured': event.captured,
+                    'fen': event.fen_after,
                     'status': result.get('status', 'ongoing'),
-                    'winner': result.get('winner'),
                 },
-                'fen': result['fen'],
                 'white_time': game.white_time_left,
                 'black_time': game.black_time_left,
             }
         )
+        
+    finally:
+        await self.release_move_lock(game.game_id)
+
+# ADD lock methods
+@database_sync_to_async
+def acquire_move_lock(self, game_id):
+    from django.core.cache import cache
+    return cache.add(f'move_lock_{game_id}', 'locked', timeout=5)
+
+@database_sync_to_async
+def release_move_lock(self, game_id):
+    from django.core.cache import cache
+    cache.delete(f'move_lock_{game_id}')
+
+# ADD event handler
+async def move_made_event(self, event):
+    await self.send(json.dumps({
+        'type': 'move_made',
+        'event': event['event'],
+        'white_time': event['white_time'],
+        'black_time': event['black_time'],
+    }))
     
     async def handle_chat(self, payload):
         """Broadcast chat message to all players in game"""
