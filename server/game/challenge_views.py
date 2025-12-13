@@ -98,6 +98,8 @@ def get_challenges(request):
 @permission_classes([IsAuthenticated])
 def accept_challenge(request, challenge_id):
     """Accept a game challenge"""
+    from .redis_pubsub import notify_user_via_channel
+    
     challenge = get_object_or_404(
         GameChallenge,
         id=challenge_id,
@@ -116,10 +118,10 @@ def accept_challenge(request, challenge_id):
     
     # Parse time control
     parts = challenge.time_control.split('+')
-    initial_time = int(parts[0]) * 60  # Convert to seconds
+    initial_time = int(parts[0]) * 60
     increment = int(parts[1]) if len(parts) > 1 else 0
     
-    # Create game - challenger plays white
+    # Create game
     game = Game.objects.create(
         game_id=Game.generate_game_id(),
         white_player=challenge.challenger,
@@ -127,7 +129,7 @@ def accept_challenge(request, challenge_id):
         time_control=challenge.time_control,
         initial_time=initial_time,
         increment=increment,
-        white_time_left=initial_time * 1000,  # milliseconds
+        white_time_left=initial_time * 1000,
         black_time_left=initial_time * 1000,
         status='ongoing',
         started_at=timezone.now(),
@@ -140,12 +142,31 @@ def accept_challenge(request, challenge_id):
     challenge.game = game
     challenge.save()
     
+    # 🔥 NOTIFY BOTH PLAYERS via WebSocket
+    notification = {
+        'type': 'challenge_accepted',
+        'game_id': game.game_id,
+        'challenger': {
+            'username': challenge.challenger.username,
+            'color': 'white'
+        },
+        'challenged': {
+            'username': challenge.challenged.username,
+            'color': 'black'
+        }
+    }
+    
+    # Notify challenger (sender)
+    notify_user_via_channel(challenge.challenger.id, notification)
+    
+    # Notify challenged (accepter)
+    notify_user_via_channel(challenge.challenged.id, notification)
+    
     return Response({
         'message': 'Challenge accepted',
         'game_id': game.game_id,
         'color': 'black'
     })
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
