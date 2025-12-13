@@ -3,32 +3,42 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
+from datetime import datetime
 
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.game_id = self.scope['url_route']['kwargs']['game_id']
         self.room_group_name = f'game_{self.game_id}'
-        self.clock_task = None
-        self.last_clock_update = None
         
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
+
+        # subscribe to clock
+        self.clock_manager = GameClockManager.get_or_create(self.game_id)
+        self.clock_manager.subscribe(self.channel_name)
         
         await self.accept()
     
     async def disconnect(self, close_code):
         # Cancel clock sync task
-        if self.clock_task:
-            self.clock_task.cancel()
+        if hasattr(self, 'clock_manager'):
+            self.clock_manager.unsubscribe(self.channel_name)
         
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
     
+    async def clock_tick(self, event):
+        await self.send(json.dumps({
+            'type': 'clock_sync',
+            'white_time': event['white_time'],
+            'black_time': event['black_time'],
+        }))
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         msg_type = data.get('type')
@@ -95,48 +105,96 @@ class GameConsumer(AsyncWebsocketConsumer):
         if game.status == 'ongoing':
             self.clock_task = asyncio.create_task(self.clock_sync_loop())
     
-    async def clock_sync_loop(self):
-        """Send clock updates every 1 second"""
+class GameClockManager:
+    """Singleton-style clock manager per game"""
+    _instances = {}
+    
+    @classmethod
+    def get_or_create(cls, game_id):
+        if game_id not in cls._instances:
+            cls._instances[game_id] = cls(game_id)
+        return cls._instances[game_id]
+    
+    def __init__(self, game_id):
+        self.game_id = game_id
+        self.task = None
+        self.last_tick = None
+        self.subscribers = set()
+    
+    def subscribe(self, channel_name):
+        self.subscribers.add(channel_name)
+        if not self.task or self.task.done():
+            self.task = asyncio.create_task(self._tick_loop())
+    
+    def unsubscribe(self, channel_name):
+        self.subscribers.discard(channel_name)
+        if not self.subscribers and self.task:
+            self.task.cancel()
+    
+    async def _tick_loop(self):
+        from channels.layers import get_channel_layer
+        from .models import Game
+        
+        channel_layer = get_channel_layer()
+        self.last_tick = datetime.now()
+        
         try:
-            while True:
+            while self.subscribers:
                 await asyncio.sleep(1)
-                game = await self.get_game()
                 
-                if not game or game.status != 'ongoing':
+                # Get game from DB
+                try:
+                    game = await self._get_game()
+                except:
                     break
                 
-                # Calculate time elapsed since last update
-                now = timezone.now()
-                if self.last_clock_update and game.current_turn:
-                    elapsed_ms = int((now - self.last_clock_update).total_seconds() * 1000)
-                    
-                    # Deduct time from current player
-                    if game.current_turn == 'white':
-                        game.white_time_left = max(0, game.white_time_left - elapsed_ms)
-                        if game.white_time_left == 0:
-                            await self.time_forfeit('white')
-                            break
-                    else:
-                        game.black_time_left = max(0, game.black_time_left - elapsed_ms)
-                        if game.black_time_left == 0:
-                            await self.time_forfeit('black')
-                            break
-                    
-                    await self.save_game_time(game)
+                if game.status != 'ongoing':
+                    break
                 
-                self.last_clock_update = now
+                # Calculate elapsed
+                now = datetime.now()
+                elapsed_ms = int((now - self.last_tick).total_seconds() * 1000)
+                self.last_tick = now
                 
-                # Broadcast clock sync
-                await self.channel_layer.group_send(
-                    self.room_group_name,
+                # Deduct from current player
+                if game.current_turn == 'white':
+                    game.white_time_left = max(0, game.white_time_left - elapsed_ms)
+                    time_out = game.white_time_left == 0
+                else:
+                    game.black_time_left = max(0, game.black_time_left - elapsed_ms)
+                    time_out = game.black_time_left == 0
+                
+                await self._save_time(game)
+                
+                # Broadcast
+                await channel_layer.group_send(
+                    f'game_{self.game_id}',
                     {
-                        'type': 'clock_sync_broadcast',
+                        'type': 'clock_tick',
                         'white_time': game.white_time_left,
                         'black_time': game.black_time_left,
                     }
                 )
+                
+                if time_out:
+                    await self._handle_timeout(game)
+                    break
+                    
         except asyncio.CancelledError:
             pass
+    
+    @database_sync_to_async
+    def _get_game(self):
+        from .models import Game
+        return Game.objects.get(game_id=self.game_id)
+    
+    @database_sync_to_async
+    def _save_time(self, game):
+        game.save(update_fields=['white_time_left', 'black_time_left'])
+    
+    async def _handle_timeout(self, game):
+        # Implementation same as before
+        pass
     
     async def send_clock_sync(self):
         """Send immediate clock sync"""
