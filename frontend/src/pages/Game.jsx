@@ -158,54 +158,64 @@ function Game() {
     });
   };
 
-  const handleOpponentMove = (data) => {
-    console.log('Opponent moved:', data.move);
-    
-    // Update board from server FEN (authoritative)
-    const newBoard = new Board(data.fen || data.move.fen);
-    setBoard(newBoard);
-    setValidator(new MoveValidator(newBoard));
+const handleOpponentMove = useCallback((data) => {
+  console.log('Move event received:', data);
+  
+  // Handle both old format (move_made) and new format (move_made_event)
+  const moveData = data.event || data.move;
+  const fen = data.event?.fen || data.fen || moveData.fen;
+  
+  if (!fen) {
+    console.error('No FEN in move data:', data);
+    return;
+  }
+  
+  // Update board from server FEN (authoritative)
+  const newBoard = new Board(fen);
+  setBoard(newBoard);
+  setValidator(new MoveValidator(newBoard));
 
-    // Add move to history
-    const moveData = {
-      from: data.move.from,
-      to: data.move.to,
-      piece: data.move.piece,
-      captured: data.move.captured,
-      notation: data.move.notation,
-      color: data.move.color,
-      timestamp: Date.now(),
-    };
-    
-    setMoves(prev => [...prev, moveData]);
-    setCurrentMoveIndex(prev => prev + 1);
-
-    // Update captured pieces
-    if (data.move.captured) {
-      setCapturedPieces(prev => ({
-        ...prev,
-        [data.move.color]: [...prev[data.move.color], data.move.captured],
-      }));
-    }
-
-    // Update clock times if provided
-    if (data.white_time !== undefined) {
-      setWhiteTime(data.white_time);
-    }
-    if (data.black_time !== undefined) {
-      setBlackTime(data.black_time);
-    }
-
-    // Update game state
-    setGameState(prev => ({
-      ...prev,
-      status: data.move.status || prev.status,
-      turn: newBoard.turn,
-      check: data.move.is_check ? newBoard.turn : null,
-      winner: data.move.winner || prev.winner,
-      lastMove: { from: data.move.from, to: data.move.to },
-    }));
+  // Add move to history with all fields
+  const moveEntry = {
+    from: moveData.from,
+    to: moveData.to,
+    piece: moveData.piece,
+    captured: moveData.captured,
+    notation: moveData.notation,
+    color: moveData.color,
+    timestamp: moveData.timestamp || Date.now(),
+    sequence: moveData.sequence || data.event?.sequence,
   };
+  
+  setMoves(prev => [...prev, moveEntry]);
+  setCurrentMoveIndex(prev => prev + 1);
+
+  // Update captured pieces
+  if (moveData.captured) {
+    setCapturedPieces(prev => ({
+      ...prev,
+      [moveData.color]: [...prev[moveData.color], moveData.captured],
+    }));
+  }
+
+  // Update clock times (authoritative from server)
+  if (data.white_time !== undefined) {
+    setWhiteTime(data.white_time);
+  }
+  if (data.black_time !== undefined) {
+    setBlackTime(data.black_time);
+  }
+
+  // Update game state
+  setGameState(prev => ({
+    ...prev,
+    status: moveData.status || data.event?.status || prev.status,
+    turn: newBoard.turn,
+    check: moveData.is_check ? newBoard.turn : null,
+    winner: moveData.winner || data.event?.winner || prev.winner,
+    lastMove: { from: moveData.from, to: moveData.to },
+  }));
+}, []);
 
   const handleMove = (from, to) => {
     if (isSpectator) return;
@@ -238,33 +248,13 @@ function Game() {
     }
   };
 
-  const executeMove = (from, to, promotion) => {
-    // Client-side validation
-    if (!validator.isValidMove(from, to, promotion)) {
-      console.log('Invalid move (client validation)');
-      setError('Invalid move');
-      return;
-    }
-
-    // Optimistic update (will be corrected by server if wrong)
-    const testBoard = board.clone();
-    const capturedPiece = testBoard.getPiece(to);
-    validator.makeMove(testBoard, from, to, promotion);
-    
-    setBoard(testBoard);
-    setValidator(new MoveValidator(testBoard));
-
-    // Send to server for authoritative validation
-    send({
-      type: 'move',
-      payload: {
-        from,
-        to,
-        promotion,
-        timestamp: Date.now(),
-      },
-    });
-  };
+const executeMove = (from, to, promotion) => {
+  // NO optimistic update - just send and wait
+  send({
+    type: 'move',
+    payload: { from, to, promotion, timestamp: Date.now() },
+  });
+};
 
   const applyStateSnapshot = (data) => {
     // Used when jumping to a specific move
@@ -333,7 +323,7 @@ function Game() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr_350px] gap-6 h-full">
+      <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_280px] gap-4 h-full">
         {/* Left Sidebar - Player Info & Controls */}
         <div className="space-y-6">
           {/* Opponent Clock */}

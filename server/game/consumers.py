@@ -308,9 +308,25 @@ def release_move_lock(self, game_id):
 
 # ADD event handler
 async def move_made_event(self, event):
+    """Broadcast move event to all connected clients"""
+    event_data = event['event']
+    
     await self.send(json.dumps({
         'type': 'move_made',
-        'event': event['event'],
+        'fen': event_data['fen'],
+        'move': {
+            'from': event_data['from'],
+            'to': event_data['to'],
+            'piece': event_data['piece'],
+            'captured': event_data.get('captured'),
+            'notation': event_data['notation'],
+            'color': event_data['color'],
+            'status': event_data.get('status', 'ongoing'),
+            'winner': event_data.get('winner'),
+            'is_check': event_data.get('is_check', False),
+            'timestamp': event_data['timestamp'],
+            'sequence': event_data['sequence'],
+        },
         'white_time': event['white_time'],
         'black_time': event['black_time'],
     }))
