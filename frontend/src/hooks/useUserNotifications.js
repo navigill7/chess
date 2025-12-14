@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,7 +20,6 @@ function useUserNotifications() {
         const data = JSON.parse(event.data);
         
         if (data.type === 'challenge_accepted') {
-          // 🔥 Auto-navigate to game
           navigate(`/game/${data.game_id}`);
         }
       };

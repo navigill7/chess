@@ -161,7 +161,6 @@ function Game() {
 const handleOpponentMove = useCallback((data) => {
   console.log('Move event received:', data);
   
-  // Handle both old format (move_made) and new format (move_made_event)
   const moveData = data.event || data.move;
   const fen = data.event?.fen || data.fen || moveData.fen;
   
@@ -170,24 +169,29 @@ const handleOpponentMove = useCallback((data) => {
     return;
   }
   
-  // Update board from server FEN (authoritative)
+  // FIX: Remove optimistic move if it exists
+  setMoves(prev => {
+    const filtered = prev.filter(m => !m.optimistic);
+    
+    // Add confirmed move from server
+    const confirmedMove = {
+      from: moveData.from,
+      to: moveData.to,
+      piece: moveData.piece,
+      captured: moveData.captured,
+      notation: moveData.notation,
+      color: moveData.color,
+      timestamp: moveData.timestamp || Date.now(),
+      sequence: moveData.sequence || data.event?.sequence,
+    };
+    
+    return [...filtered, confirmedMove];
+  });
+  
+  // Update board from authoritative server FEN
   const newBoard = new Board(fen);
   setBoard(newBoard);
   setValidator(new MoveValidator(newBoard));
-
-  // Add move to history with all fields
-  const moveEntry = {
-    from: moveData.from,
-    to: moveData.to,
-    piece: moveData.piece,
-    captured: moveData.captured,
-    notation: moveData.notation,
-    color: moveData.color,
-    timestamp: moveData.timestamp || Date.now(),
-    sequence: moveData.sequence || data.event?.sequence,
-  };
-  
-  setMoves(prev => [...prev, moveEntry]);
   setCurrentMoveIndex(prev => prev + 1);
 
   // Update captured pieces
@@ -198,7 +202,7 @@ const handleOpponentMove = useCallback((data) => {
     }));
   }
 
-  // Update clock times (authoritative from server)
+  // Update clock times
   if (data.white_time !== undefined) {
     setWhiteTime(data.white_time);
   }
@@ -249,12 +253,42 @@ const handleOpponentMove = useCallback((data) => {
   };
 
 const executeMove = (from, to, promotion) => {
-  // NO optimistic update - just send and wait
+  // FIX: Optimistic update - show move immediately
+  const tempBoard = board.clone();
+  const piece = tempBoard.getPiece(from);
+  
+  if (promotion && piece.type === 'pawn') {
+    piece.type = promotion;
+  }
+  
+  tempBoard.board[to] = piece;
+  delete tempBoard.board[from];
+  tempBoard.turn = tempBoard.turn === 'white' ? 'black' : 'white';
+  
+  // Update UI immediately
+  setBoard(tempBoard);
+  setValidator(new MoveValidator(tempBoard));
+  
+  // Add to move history optimistically
+  const tempMove = {
+    from,
+    to,
+    piece: piece.type,
+    notation: `${from}-${to}`,
+    color: board.turn,
+    optimistic: true,  // Flag for rollback if needed
+  };
+  
+  setMoves(prev => [...prev, tempMove]);
+  setCurrentMoveIndex(prev => prev + 1);
+  
+  // Send to server
   send({
     type: 'move',
     payload: { from, to, promotion, timestamp: Date.now() },
   });
 };
+
 
   const applyStateSnapshot = (data) => {
     // Used when jumping to a specific move
