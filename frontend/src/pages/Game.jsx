@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import useWebSocket from '../services/socketService';
+import useWebSocket from '../hooks/useWebSocket';
 
 import ChessBoard from '../components/chess/ChessBoard';
 import GameClock from '../components/chess/GameClock';
@@ -18,7 +18,6 @@ function Game() {
   const { gameId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [connectionError, setConnectionError] = useState(null);
 
   // Game state
   const [board, setBoard] = useState(new Board());
@@ -50,81 +49,11 @@ function Game() {
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [pendingMove, setPendingMove] = useState(null);
   const [error, setError] = useState(null);
+  const [connectionError, setConnectionError] = useState(null);
   const [chatMessageHandler, setChatMessageHandler] = useState(null);
 
-  // WebSocket connection
-  const handleOpen = useCallback(() => {
-    console.log('✅ WebSocket connected');
-    setConnectionError(null);
-    send({ type: 'join_game' });
-  }, []); // Empty deps - send is stable from the hook
-
-  const handleMessage = useCallback((data) => {
-    handleWebSocketMessage(data);
-  }, [handleWebSocketMessage]);
-
-  const handleError = useCallback((err) => {
-    console.error('WebSocket error:', err);
-    setConnectionError('Connection failed. Please check your internet.');
-  }, []);
-
-  const handleClose = useCallback((event) => {
-    console.log('WebSocket closed', event.code);
-    if (event.code === 1008 || event.code === 4001) {
-      setConnectionError('Session expired. Please login again.');
-      setTimeout(() => navigate('/login'), 3000);
-    }
-  }, [navigate]);
-
-  const { isConnected, lastMessage, send, error: wsError } = useWebSocket(`/ws/game/${gameId}/`, {
-    onOpen: handleOpen,
-    onMessage: handleMessage,
-    onError: handleError,
-    onClose: handleClose,
-    reconnect: true,
-    reconnectInterval: 3000,
-    maxReconnectAttempts: 3,
-  });
-
-  const handleWebSocketMessage = useCallback((data) => {
-    console.log('WebSocket message received:', data.type);
-    
-    switch (data.type) {
-      case 'game_state':
-        initializeGame(data);
-        break;
-
-      case 'move_made':
-        handleOpponentMove(data);
-        break;
-
-      case 'clock_sync':
-        setWhiteTime(data.white_time);
-        setBlackTime(data.black_time);
-        break;
-
-      case 'state_snapshot':
-        applyStateSnapshot(data);
-        break;
-
-      case 'game_ended':
-        handleGameEnd(data);
-        break;
-
-      case 'chat_message':
-        // Handle chat directly without separate handler
-        console.log('Chat message:', data);
-        break;
-
-      case 'error':
-        console.error('Game error:', data.message);
-        setError(data.message);
-        break;
-        
-      default:
-        console.warn('Unknown message type:', data.type);
-    }
-  }, []);
+  // ==================== HANDLER FUNCTIONS ====================
+  // Define all handler functions before WebSocket setup to avoid circular dependencies
 
   const initializeGame = useCallback((data) => {
     console.log('Initializing game with data:', data);
@@ -166,9 +95,189 @@ function Game() {
       check: data.check,
       winner: data.winner,
     });
-  }, [user?.id])
+  }, [user]);
 
-  const handleMove = (from, to) => {
+  const handleOpponentMove = useCallback((data) => {
+    console.log('Move event received:', data);
+    
+    const moveData = data.move;
+    
+    if (!moveData) {
+      console.error('No move data in event:', data);
+      return;
+    }
+    
+    // Remove optimistic move and replace with confirmed move
+    setMoves(prev => {
+      // Filter out optimistic moves
+      const confirmed = prev.filter(m => !m.optimistic);
+      
+      // Add server-confirmed move
+      const serverMove = {
+        from: moveData.from,
+        to: moveData.to,
+        piece: moveData.piece,
+        captured: moveData.captured,
+        notation: moveData.notation,
+        color: moveData.color,
+        timestamp: moveData.timestamp || Date.now(),
+        sequence: moveData.sequence,
+      };
+      
+      return [...confirmed, serverMove];
+    });
+    
+    // Update board from FEN if provided
+    if (data.fen) {
+      const newBoard = new Board(data.fen);
+      setBoard(newBoard);
+      setValidator(new MoveValidator(newBoard));
+    }
+    
+    setCurrentMoveIndex(prev => prev + 1);
+
+    // Update clock times (authoritative from server)
+    if (data.white_time !== undefined) {
+      setWhiteTime(data.white_time);
+    }
+    if (data.black_time !== undefined) {
+      setBlackTime(data.black_time);
+    }
+
+    // Update game state
+    setGameState(prev => ({
+      ...prev,
+      status: moveData.status || prev.status,
+      turn: moveData.next_turn || (prev.turn === 'white' ? 'black' : 'white'),
+      check: moveData.is_check ? moveData.next_turn : null,
+      winner: moveData.winner || prev.winner,
+      lastMove: { from: moveData.from, to: moveData.to },
+    }));
+  }, []);
+
+  const applyStateSnapshot = useCallback((data) => {
+    const newBoard = new Board(data.fen);
+    setBoard(newBoard);
+    setValidator(new MoveValidator(newBoard));
+    
+    setWhiteTime(data.white_time);
+    setBlackTime(data.black_time);
+    setCurrentMoveIndex(data.move_index);
+    
+    setGameState(prev => ({
+      ...prev,
+      turn: newBoard.turn,
+      check: data.check,
+      lastMove: data.last_move,
+    }));
+  }, []);
+
+  const handleGameEnd = useCallback((data) => {
+    setGameState(prev => ({
+      ...prev,
+      status: data.status,
+      winner: data.winner,
+      reason: data.reason,
+    }));
+  }, []);
+
+  const rollbackOptimisticMove = useCallback((sendFunc) => {
+    // Remove last optimistic move and restore board state
+    setMoves(prev => prev.filter(m => !m.optimistic));
+    
+    // Request current state from server
+    if (sendFunc) {
+      sendFunc({ type: 'join_game' });
+    }
+  }, []);
+
+  // WebSocket message handler
+  const handleWebSocketMessage = useCallback((data) => {
+    console.log('WebSocket message received:', data.type);
+    
+    switch (data.type) {
+      case 'game_state':
+        initializeGame(data);
+        break;
+
+      case 'move_made':
+        handleOpponentMove(data);
+        break;
+
+      case 'clock_sync':
+        setWhiteTime(data.white_time);
+        setBlackTime(data.black_time);
+        break;
+
+      case 'state_snapshot':
+        applyStateSnapshot(data);
+        break;
+
+      case 'game_ended':
+        handleGameEnd(data);
+        break;
+
+      case 'chat_message':
+        if (chatMessageHandler) {
+          chatMessageHandler(data);
+        }
+        break;
+
+      case 'error':
+        console.error('Game error:', data.message);
+        setError(data.message);
+        break;
+        
+      default:
+        console.warn('Unknown message type:', data.type);
+    }
+  }, [chatMessageHandler, initializeGame, handleOpponentMove, applyStateSnapshot, handleGameEnd]);
+
+  // WEBSOCKET SETUP
+
+  const handleOpen = useCallback(() => {
+    console.log('✅ WebSocket connected');
+    setConnectionError(null);
+  }, []);
+
+  const handleMessage = useCallback((data) => {
+    handleWebSocketMessage(data);
+  }, [handleWebSocketMessage]);
+
+  const handleError = useCallback((err) => {
+    console.error('WebSocket error:', err);
+    setConnectionError('Connection failed. Please check your internet.');
+  }, []);
+
+  const handleClose = useCallback((event) => {
+    console.log('WebSocket closed', event.code);
+    if (event.code === 1008 || event.code === 4001) {
+      setConnectionError('Session expired. Please login again.');
+      setTimeout(() => navigate('/login'), 3000);
+    }
+  }, [navigate]);
+
+  const { isConnected, lastMessage, send, error: wsError } = useWebSocket(`/ws/game/${gameId}/`, {
+    onOpen: handleOpen,
+    onMessage: handleMessage,
+    onError: handleError,
+    onClose: handleClose,
+    reconnect: true,
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 3,
+  });
+
+  // Send join_game after WebSocket is connected
+  useEffect(() => {
+    if (isConnected && send) {
+      console.log('Joining game...');
+      send({ type: 'join_game' });
+    }
+  }, [isConnected, send]);
+
+  // GAME LOGIC
+
+  const handleMove = useCallback((from, to) => {
     if (isSpectator) return;
     if (gameState.status !== 'ongoing') return;
     if (board.turn !== playerColor) return;
@@ -189,17 +298,17 @@ function Game() {
     }
 
     executeMove(from, to, null);
-  };
+  }, [isSpectator, gameState.status, board, playerColor]);
 
-  const handlePromotion = (promotionPiece) => {
+  const handlePromotion = useCallback((promotionPiece) => {
     setShowPromotionModal(false);
     if (pendingMove) {
       executeMove(pendingMove.from, pendingMove.to, promotionPiece);
       setPendingMove(null);
     }
-  };
+  }, [pendingMove]);
 
-  const executeMove = (from, to, promotion) => {
+  const executeMove = useCallback((from, to, promotion) => {
     // OPTIMISTIC UPDATE - Show move immediately for instant feedback
     const tempBoard = board.clone();
     const piece = tempBoard.getPiece(from);
@@ -245,170 +354,60 @@ function Game() {
     }
     
     // Send to server
-    send({
-      type: 'move',
-      payload: { from, to, promotion, timestamp: Date.now() },
-    });
-  };
+    if (send) {
+      send({
+        type: 'move',
+        payload: { from, to, promotion, timestamp: Date.now() },
+      });
+    }
+  }, [board, send]);
 
-const handleOpponentMove = useCallback((data) => {
-  console.log('Move event received:', data);
-  
-  const moveData = data.move;
-  
-  if (!moveData) {
-    console.error('No move data in event:', data);
-    return;
-  }
-  
-  // CRITICAL: Update board from FEN (authoritative)
-  if (moveData.fen) {
-    const newBoard = new Board(moveData.fen);
-    setBoard(newBoard);
-    setValidator(new MoveValidator(newBoard));
-  }
-  
-  // Remove optimistic moves and add confirmed move
-  setMoves(prev => {
-    const confirmed = prev.filter(m => !m.optimistic);
-    
-    const serverMove = {
-      from: moveData.from,
-      to: moveData.to,
-      piece: moveData.piece,
-      captured: moveData.captured,
-      notation: moveData.notation,
-      color: moveData.color,
-      timestamp: moveData.timestamp || Date.now(),
-      sequence: moveData.sequence,
-    };
-    
-    return [...confirmed, serverMove];
-  });
-  
-  setCurrentMoveIndex(prev => {
-    const confirmedCount = moves.filter(m => !m.optimistic).length;
-    return confirmedCount;
-  });
-
-  // Update captured pieces
-  if (moveData.captured) {
-    setCapturedPieces(prev => ({
-      ...prev,
-      [moveData.color]: [...prev[moveData.color], moveData.captured],
-    }));
-  }
-
-  // Update clock times
-  if (data.white_time !== undefined) setWhiteTime(data.white_time);
-  if (data.black_time !== undefined) setBlackTime(data.black_time);
-
-  // Update game state
-  setGameState(prev => ({
-    ...prev,
-    status: moveData.status || prev.status,
-    turn: board.turn,
-    check: moveData.is_check ? board.turn : null,
-    winner: moveData.winner || prev.winner,
-    lastMove: { from: moveData.from, to: moveData.to },
-  }));
-}, [board, moves]);
-
-  const rollbackOptimisticMove = () => {
-    // Remove last optimistic move and restore board state
-    setMoves(prev => prev.filter(m => !m.optimistic));
-    
-    // Reload board from last confirmed move
-    // In a production app, you'd store FEN snapshots
-    // For now, we'll request current state from server
-    send({ type: 'join_game' });
-  };
-
-  const handleMoveClick = (index) => {
-    send({
-      type: 'jump_to_move',
-      payload: {
-        move_index: index,
-      },
-    });
-  };
-
-  const applyStateSnapshot = useCallback((data) => {
-    const newBoard = new Board(data.fen);
-    setBoard(newBoard);
-    setValidator(new MoveValidator(newBoard));
-    
-    setWhiteTime(data.white_time);
-    setBlackTime(data.black_time);
-    setCurrentMoveIndex(data.move_index);
-    
-    setGameState(prev => ({
-      ...prev,
-      turn: newBoard.turn,
-      check: data.check,
-      lastMove: data.last_move,
-    }));
-  }, []);
-
-  const handleGameEnd = useCallback((data) => {
-    setGameState(prev => ({
-      ...prev,
-      status: data.status,
-      winner: data.winner,
-      reason: data.reason,
-    }));
-  }, []);
-
-  const handleResign = () => {
-    send({ type: 'resign' });
-  };
-
-  const handleOfferDraw = () => {
-    send({ type: 'offer_draw' });
-  };
-
-  const handleRequestTakeback = () => {
-    send({ type: 'request_takeback' });
-  };
-
-  const getValidMoves = (square) => {
-    return validator.getPieceMoves(square);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (send) {
-        send({ type: 'disconnect' });
-      }
-    };
+  const handleMoveClick = useCallback((index) => {
+    if (send) {
+      send({
+        type: 'jump_to_move',
+        payload: {
+          move_index: index,
+        },
+      });
+    }
   }, [send]);
+
+  const handleResign = useCallback(() => {
+    if (send) {
+      send({ type: 'resign' });
+    }
+  }, [send]);
+
+  const handleOfferDraw = useCallback(() => {
+    if (send) {
+      send({ type: 'offer_draw' });
+    }
+  }, [send]);
+
+  const handleRequestTakeback = useCallback(() => {
+    if (send) {
+      send({ type: 'request_takeback' });
+    }
+  }, [send]);
+
+  const getValidMoves = useCallback((square) => {
+    return validator.getPieceMoves(square);
+  }, [validator]);
+
+  const registerChatHandler = useCallback((handler) => {
+    setChatMessageHandler(() => handler);
+  }, []);
+
+  // RENDER 
 
   return (
     <div className="container mx-auto max-w-7xl h-[calc(100vh-150px)]">
-      {(connectionError || wsError) && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
-          <div className="bg-red-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-red-600">
-            <div className="flex items-center space-x-3">
-              <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-              </svg>
-              <div className="flex-1">
-                <p className="font-semibold">Connection Error</p>
-                <p className="text-sm text-white/90">{connectionError || wsError}</p>
-              </div>
-              <button 
-                onClick={() => {
-                  setConnectionError(null);
-                  window.location.reload();
-                }}
-                className="text-white/80 hover:text-white"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+      {/* Connection Error Display */}
+      {connectionError && (
+        <div className="fixed top-20 right-6 bg-orange-500/90 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          {connectionError}
+          <button onClick={() => setConnectionError(null)} className="ml-4 font-bold">×</button>
         </div>
       )}
 
@@ -417,15 +416,6 @@ const handleOpponentMove = useCallback((data) => {
         <div className="fixed top-20 right-6 bg-red-500/90 text-white px-6 py-3 rounded-lg shadow-lg z-50">
           {error}
           <button onClick={() => setError(null)} className="ml-4 font-bold">×</button>
-        </div>
-      )}
-
-      {!isConnected && !connectionError && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-yellow-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-3">
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <span className="font-medium">Reconnecting to game...</span>
-          </div>
         </div>
       )}
 
@@ -507,7 +497,7 @@ const handleOpponentMove = useCallback((data) => {
               isPlayerChat={!isSpectator}
               currentUser={user}
               websocketSend={send}
-              onMessage={null}
+              onMessage={registerChatHandler}
             />
           </div>
         </div>
