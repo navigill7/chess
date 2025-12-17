@@ -120,6 +120,24 @@ class AuthService {
   isAuthenticated() {
     return !!this.getToken();
   }
+
+  async googleLogin(googleToken) {
+    try {
+      const response = await api.post('/auth/google/', {
+        token: googleToken,
+      }, { auth: false });
+
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('refresh', response.refresh);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+
+        return { success: true, data: response };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+  }
 }
 
 export default new AuthService();
