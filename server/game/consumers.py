@@ -1,7 +1,3 @@
-"""
-COMPLETELY FIXED consumers.py - All bugs removed, proper indentation
-Replace: server/game/consumers.py
-"""
 import asyncio
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
