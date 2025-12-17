@@ -39,7 +39,8 @@ def register(request):
         
         return Response({
             'user': UserSerializer(user).data,
-            'tokens': tokens,
+            'token': tokens['access'],
+            'refresh': tokens['refresh'],
             'status': True
         }, status=status.HTTP_201_CREATED)
     
@@ -96,7 +97,8 @@ def login(request):
     
     return Response({
         'user': UserSerializer(user).data,
-        'tokens': tokens,
+        'token': tokens['access'],
+        'refresh': tokens['refresh'],
         'status': True
     })
 
@@ -154,7 +156,8 @@ def google_auth(request):
         
         return Response({
             'user': UserSerializer(user).data,
-            'tokens': tokens,
+            'token': tokens['access'],
+            'refresh': tokens['refresh'],
             'is_new_user': created,
             'status': True
         }, status=status.HTTP_200_OK)

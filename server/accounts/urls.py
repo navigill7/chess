@@ -16,7 +16,6 @@ urlpatterns = [
 
     # OAuth
     path('google/', views.google_auth, name='google_auth'),
-    path('google/callback/', views.google_callback, name='google_callback'),
     
     # User management
     path('verify-email/<str:token>/', views.verify_email, name='verify_email'),
