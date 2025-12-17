@@ -1,8 +1,7 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-import uuid
 
 User = get_user_model()
 
@@ -68,7 +67,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "email": "Email already registered."
             })
 
-        # username is optional now
         username = attrs.get('username')
         if username and User.objects.filter(username=username).exists():
             raise serializers.ValidationError({
@@ -89,7 +87,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         return user
-
 
 
 class LoginSerializer(serializers.Serializer):
@@ -125,3 +122,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'avatar', 'country', 'bio']
+
+
+class GoogleAuthSerializer(serializers.Serializer):
+    """Serializer for Google OAuth token"""
+    token = serializers.CharField(required=True)
