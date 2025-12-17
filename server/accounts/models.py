@@ -1,24 +1,83 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import (
+    AbstractUser,
+    PermissionsMixin,
+    BaseUserManager
+)
 
-class User(AbstractUser):
+REGISTRATION_CHOICES = [
+    ('email', 'Email'),
+    ('google', 'Google')
+]
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Email must be provided")
+
+        email = self.normalize_email(email)
+        extra_fields.setdefault('is_active', True)
+
+        user = self.model(email=email, **extra_fields)
+
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()  # OAuth users
+
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        return self.create_user(email, password, **extra_fields)
+
+class User(AbstractUser, PermissionsMixin):
+    # Core identity
     email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150, blank=True, null=True)
+
+    first_name = models.CharField(max_length=30, blank=True, null=True)
+    last_name = models.CharField(max_length=30, blank=True, null=True)
+
+    registration_method = models.CharField(
+        max_length=20,
+        choices=REGISTRATION_CHOICES,
+        default='email'
+    )
+
+    is_email_verified = models.BooleanField(default=False)
+
+    # Chess stats
     rating = models.IntegerField(default=800)
     games_played = models.IntegerField(default=0)
     games_won = models.IntegerField(default=0)
     games_lost = models.IntegerField(default=0)
     games_drawn = models.IntegerField(default=0)
-    is_email_verified = models.BooleanField(default=False)
-    email_verification_token = models.CharField(max_length=100, blank=True, null=True)
+
+    # Profile
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
+
+    # Presence
     is_online = models.BooleanField(default=False)
     last_seen = models.DateTimeField(default=timezone.now)
-    
+
+    # Permissions
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    objects = CustomUserManager()
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []
     
     class Meta:
         db_table = 'users'
