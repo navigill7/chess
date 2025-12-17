@@ -6,18 +6,34 @@ readme = "README.md"
 requires-python = ">=3.12"
 
 dependencies = [
-    # Core Django stack
+    # Core Django
     "Django==5.0.1",
     "djangorestframework==3.14.0",
-    "django-cors-headers==4.3.1",
+
+    # JWT Authentication
     "djangorestframework-simplejwt==5.3.1",
 
-    # ASGI / WebSockets
+    # Google OAuth
+    "google-auth==2.23.0",
+    "google-auth-oauthlib==1.1.0",
+    "google-auth-httplib2==0.1.1",
+
+    # Redis (for caching and channels)
+    "django-redis==5.4.0",
+    "redis==5.0.0",
+
+    # Database
+    "psycopg2-binary==2.9.9", # PostgreSQL
+    "dj-database-url==2.1.0",
+
+    # WebSockets
     "channels==4.0.0",
     "channels-redis==4.1.0",
     "daphne==4.0.0",
 
-    # Utilities
-    "Pillow==10.1.0",
-    "python-dotenv==1.0.0"
+    # CORS
+    "django-cors-headers==4.3.1",
+
+    # Environment
+    "python-dotenv==1.0.0",
 ]
