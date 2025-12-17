@@ -5,8 +5,17 @@ class UserNotificationConsumer(AsyncWebsocketConsumer):
     """Per-user WebSocket for notifications (challenges, friend requests, etc.)"""
 
     async def connect(self):
+        # ACCEPT FIRST - CRITICAL FIX
+        await self.accept()
+        
         self.user = self.scope['user']
+        
+        # Check auth AFTER accepting
         if not self.user.is_authenticated:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'Authentication required - Please pass ?token=YOUR_JWT in WebSocket URL'
+            }))
             await self.close()
             return
         
@@ -17,7 +26,12 @@ class UserNotificationConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         
-        await self.accept()
+        # Send connection success
+        await self.send(text_data=json.dumps({
+            'type': 'connected',
+            'user_id': self.user.id,
+            'message': 'Successfully connected to notifications'
+        }))
     
     async def disconnect(self, close_code):
         if hasattr(self, 'user_group'):
