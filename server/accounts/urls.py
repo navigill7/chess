@@ -18,7 +18,6 @@ urlpatterns = [
     path('google/', views.google_auth, name='google_auth'),
     
     # User management
-    path('verify-email/<str:token>/', views.verify_email, name='verify_email'),
     path('me/', views.get_current_user, name='current_user'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('password/change/', views.change_password, name='change_password'),

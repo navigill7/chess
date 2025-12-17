@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -73,6 +74,21 @@ function Register() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const result = await authService.googleLogin(credentialResponse.credential);
+    
+    if (result.success) {
+      navigate('/'); // Redirect to home
+    } else {
+      alert('Google login failed: ' + result.error);
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error('Google Login Failed');
+    alert('Google login failed');
   };
 
   return (
@@ -257,6 +273,10 @@ function Register() {
           </p>
         </div>
       </div>
+      <GoogleLogin
+        onSuccess={handleGoogleSuccess}
+        onError={handleGoogleError}
+      />
     </div>
   );
 }
