@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
+import authService from '../services/authService';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -76,19 +77,36 @@ function Register() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    const result = await authService.googleLogin(credentialResponse.credential);
+    const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setErrors({});
     
-    if (result.success) {
-      navigate('/'); // Redirect to home
-    } else {
-      alert('Google login failed: ' + result.error);
+    try {
+      const result = await authService.googleLogin(credentialResponse.credential);
+      
+      if (result.success) {
+        // AuthContext will handle navigation
+        return;
+      } else {
+        setErrors({ 
+          submit: result.error || 'Google sign up failed' 
+        });
+      }
+    } catch (err) {
+      console.error('Google signup error:', err);
+      setErrors({ 
+        submit: 'An unexpected error occurred with Google signup' 
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleError = () => {
-    console.error('Google Login Failed');
-    alert('Google login failed');
+    console.error('Google Signup Failed');
+    setErrors({ 
+      submit: 'Google signup failed. Please try again.' 
+    });
   };
 
   return (
@@ -264,6 +282,20 @@ function Register() {
             <div className="flex-1 border-t border-white/20"></div>
           </div>
 
+          <div className="mt-4">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              useOneTap={false}
+              theme="filled_black"
+              size="large"
+              text="signup_with"
+              shape="rectangular"
+              logo_alignment="left"
+              width="100%"
+            />
+          </div>
+
           {/* Sign In Link */}
           <p className="text-center text-white/60 text-sm">
             Already have an account?{' '}
@@ -273,10 +305,6 @@ function Register() {
           </p>
         </div>
       </div>
-      <GoogleLogin
-        onSuccess={handleGoogleSuccess}
-        onError={handleGoogleError}
-      />
     </div>
   );
 }

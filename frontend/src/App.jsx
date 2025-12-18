@@ -5,8 +5,10 @@ import AppRouter from './router'
 // Main App Component
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
+    <GoogleOAuthProvider clientId={import.meta.env.GOOGLE_OAUTH_CLIENT_ID}>
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   );
 }

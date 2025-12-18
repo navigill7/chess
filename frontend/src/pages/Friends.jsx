@@ -61,7 +61,7 @@ function Friends() {
 
   const fetchChallenges = async () => {
     try {
-      const response = await api.get('/game/challenges/');
+      const response = await api.get('/game/challenges/pending/');
       setChallenges(response);
     } catch (error) {
       console.error('Failed to fetch challenges:', error);
@@ -135,7 +135,7 @@ function Friends() {
 
   const handleAcceptChallenge = async (challengeId) => {
     try {
-      const response = await api.post(`/game/challenges/${challengeId}/accept/`);
+      const response = await api.post(`/game/challenges/accept/${challengeId}/`);
       navigate(`/game/${response.game_id}`);
     } catch (error) {
       console.error('Failed to accept challenge:', error);
@@ -145,7 +145,7 @@ function Friends() {
 
   const handleRejectChallenge = async (challengeId) => {
     try {
-      await api.post(`/game/challenges/${challengeId}/reject/`);
+      await api.post(`/game/challenges/reject/${challengeId}/`);
       fetchChallenges();
     } catch (error) {
       console.error('Failed to reject challenge:', error);

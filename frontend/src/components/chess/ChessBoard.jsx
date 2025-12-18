@@ -223,7 +223,6 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
           </div>
         )}
 
-        {/* Game Status Overlay */}
         {gameState?.status && gameState.status !== "ongoing" && (
           <div style={{
             position: 'absolute',
@@ -241,7 +240,8 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
               borderRadius: '0.75rem',
               padding: '2rem',
               textAlign: 'center',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              minWidth: '400px'
             }}>
               <h2 style={{
                 fontSize: '1.875rem',
@@ -253,15 +253,55 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
                 {gameState.status === "stalemate" && "Stalemate!"}
                 {gameState.status === "draw" && "Draw!"}
                 {gameState.status === "resignation" && "Game Over"}
+                {gameState.status === "completed" && "Game Over"}
               </h2>
               <p style={{
                 color: '#374151',
-                fontSize: '1.125rem'
+                fontSize: '1.125rem',
+                marginBottom: '1.5rem'
               }}>
                 {gameState.winner
                   ? `${gameState.winner === "white" ? "White" : "Black"} wins!`
                   : "Game ended in a draw"}
               </p>
+              
+              {/* Rating Changes */}
+              {gameState.ratingChanges && (
+                <div style={{
+                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  marginTop: '1rem'
+                }}>
+                  <p style={{
+                    color: '#6366f1',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    marginBottom: '0.75rem'
+                  }}>
+                    Rating Changes
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    color: '#111827'
+                  }}>
+                    <RatingChangeDisplay
+                      playerColor="white"
+                      oldRating={gameState.ratingChanges.white.before}
+                      newRating={gameState.ratingChanges.white.after}
+                      playerName={gameState.ratingChanges.white.name}
+                    />
+                    <RatingChangeDisplay
+                      playerColor="black"
+                      oldRating={gameState.ratingChanges.black.before}
+                      newRating={gameState.ratingChanges.black.after}
+                      playerName={gameState.ratingChanges.black.name}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

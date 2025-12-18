@@ -52,6 +52,9 @@ function Game() {
   const [connectionError, setConnectionError] = useState(null);
   const [chatMessageHandler, setChatMessageHandler] = useState(null);
 
+  const [drawOffer, setDrawOffer] = useState(null);
+  const [showDrawOfferModal, setShowDrawOfferModal] = useState(false);
+
   // HANDLER FUNCTIONS
   // Define all handler functions before WebSocket setup to avoid circular dependencies
 
@@ -172,13 +175,17 @@ function Game() {
     }));
   }, []);
 
-  const handleGameEnd = useCallback((data) => {
-    setGameState(prev => ({
-      ...prev,
-      status: data.status,
-      winner: data.winner,
-      reason: data.reason,
-    }));
+const handleGameEnd = useCallback((data) => {
+  setGameState(prev => ({
+    ...prev,
+    status: data.status,
+    winner: data.winner,
+    reason: data.reason || data.termination,
+  }));
+
+  if (data.rating_changes) {
+    console.log('Rating changes:', data.rating_changes);
+  }
   }, []);
 
   const rollbackOptimisticMove = useCallback((sendFunc) => {
@@ -217,6 +224,19 @@ function Game() {
         handleGameEnd(data);
         break;
 
+      case 'draw_offer':
+        setDrawOffer({
+          from: data.offer_from,
+          username: data.username,
+        });
+        setShowDrawOfferModal(true);
+        break;
+
+      case 'draw_declined':
+        setError('Draw offer was declined');
+        setTimeout(() => setError(null), 3000);
+        break;
+
       case 'chat_message':
         if (chatMessageHandler) {
           chatMessageHandler(data);
@@ -236,7 +256,7 @@ function Game() {
   // WEBSOCKET SETUP
 
   const handleOpen = useCallback(() => {
-    console.log('✅ WebSocket connected');
+    console.log('WebSocket connected');
     setConnectionError(null);
   }, []);
 
@@ -256,6 +276,25 @@ function Game() {
       setTimeout(() => navigate('/login'), 3000);
     }
   }, [navigate]);
+
+  const handleAcceptDraw = useCallback(() => {
+    if (send) {
+      send({ type: 'accept_draw' });
+      setShowDrawOfferModal(false);
+      setDrawOffer(null);
+    }
+  }, [send]);
+
+  // 4. ADD NEW HANDLER FOR DECLINING DRAW
+  // ADD this new function after handleAcceptDraw
+
+  const handleDeclineDraw = useCallback(() => {
+    if (send) {
+      send({ type: 'decline_draw' });
+      setShowDrawOfferModal(false);
+      setDrawOffer(null);
+    }
+  }, [send]);
 
   const { isConnected, lastMessage, send, error: wsError } = useWebSocket(`/ws/game/${gameId}/`, {
     onOpen: handleOpen,
@@ -444,6 +483,9 @@ function Game() {
             onOfferDraw={handleOfferDraw}
             onRequestTakeback={handleRequestTakeback}
             gameStatus={gameState.status}
+            drawOfferReceived={showDrawOfferModal}
+            onAcceptDraw={handleAcceptDraw}
+            onDeclineDraw={handleDeclineDraw}
           />
         </div>
 
@@ -503,12 +545,53 @@ function Game() {
         </div>
       </div>
 
+      {/* Draw Offer Modal */}
+      <DrawOfferModal
+        isOpen={showDrawOfferModal}
+        offerFrom={drawOffer}
+        onAccept={handleAcceptDraw}
+        onDecline={handleDeclineDraw}
+      />
+
       {/* Promotion Modal */}
       <PromotionModal
         isOpen={showPromotionModal}
         color={playerColor}
         onSelect={handlePromotion}
       />
+    </div>
+  );
+}
+
+function DrawOfferModal({ isOpen, offerFrom, onAccept, onDecline }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border-2 border-purple-500/50 shadow-2xl p-8 max-w-md w-full mx-4">
+        <div className="text-center mb-6">
+          <Handshake className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Draw Offer</h2>
+          <p className="text-white/80">
+            {offerFrom?.username} offers a draw
+          </p>
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            onClick={onDecline}
+            className="flex-1 px-6 py-3 rounded-lg font-semibold bg-white/10 hover:bg-white/20 text-white transition-all"
+          >
+            Decline
+          </button>
+          <button
+            onClick={onAccept}
+            className="flex-1 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white transition-all"
+          >
+            Accept Draw
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

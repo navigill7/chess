@@ -133,10 +133,10 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(response.user));
       }
 
-        return { success: true, data: response };
-      } catch (error) {
-        return { success: false, error: error.message };
-      }
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 }
 

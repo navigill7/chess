@@ -6,6 +6,7 @@ function useWebSocket(url, options = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [connectionError, setConnectionError] = useState(null);
 
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
@@ -126,6 +127,54 @@ function useWebSocket(url, options = {}) {
     }
   }, []);
 
+  const handleClose = useCallback((event) => {
+    console.log('WebSocket closed', event.code, event.reason);
+    setIsConnected(false);
+    onClose?.(event);
+
+    // Authentication failure codes - DON'T reconnect
+    if (event.code === 1008 || event.code === 4001) {
+      setConnectionError('Session expired. Please login again.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh');
+      localStorage.removeItem('user');
+      reconnectAttemptsRef.current = maxReconnectAttempts; // Stop reconnection
+      
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+      return;
+    }
+
+    // Clean manual disconnect (code 1000) - NO reconnect
+    if (event.code === 1000) {
+      console.log('ℹ️ Clean disconnect - no reconnection needed');
+      return;
+    }
+
+    // Server shutdown or network issues - RETRY with backoff
+    if (reconnect && reconnectAttemptsRef.current < maxReconnectAttempts) {
+      reconnectAttemptsRef.current += 1;
+
+      const backoffDelay =
+        reconnectInterval *
+        Math.pow(1.5, reconnectAttemptsRef.current - 1);
+
+      console.log(
+        `⏳ Reconnecting in ${backoffDelay / 1000}s (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`
+      );
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connect();
+      }, backoffDelay);
+    } else {
+      console.error('❌ Max reconnection attempts reached');
+      setError('Unable to connect. Please refresh the page.');
+    }
+  }, [onClose, reconnect, reconnectInterval, maxReconnectAttempts, connect]);
+
+
   // Send Message
   const send = useCallback((data) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -148,7 +197,7 @@ function useWebSocket(url, options = {}) {
   return {
     isConnected,
     lastMessage,
-    error,
+    error: wsError || connectionError,
     send,
     disconnect,
     reconnect: connect,

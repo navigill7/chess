@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, AlertTriangle } from 'lucide-react';
 
 function GameClock({ initialTime, increment, isActive, color, playerName, playerRating }) {
   const [timeLeft, setTimeLeft] = useState(initialTime);
+
+  useEffect(() => {
+    setTimeLeft(initialTime);
+  }, [initialTime]);
 
   useEffect(() => {
     if (!isActive || timeLeft <= 0) return;
@@ -28,6 +32,7 @@ function GameClock({ initialTime, increment, isActive, color, playerName, player
 
   const isLowTime = timeLeft < 20000; // Less than 20 seconds
   const isCriticalTime = timeLeft < 10000; // Less than 10 seconds
+  const isTimeout = timeLeft === 0; // Game over by timeout
 
   return (
     <div
@@ -35,12 +40,20 @@ function GameClock({ initialTime, increment, isActive, color, playerName, player
         relative bg-white/5 backdrop-blur-lg rounded-xl border-2 p-4 transition-all
         ${isActive ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-white/10'}
         ${isCriticalTime && isActive ? 'animate-pulse' : ''}
+        ${isTimeout ? 'border-red-600 bg-red-600/10' : ''}
       `}
     >
       {/* Active Indicator */}
-      {isActive && (
+      {isActive && !isTimeout && (
         <div className="absolute top-2 right-2">
           <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+        </div>
+      )}
+
+      {/* Timeout Indicator */}
+      {isTimeout && (
+        <div className="absolute top-2 right-2">
+          <AlertTriangle className="w-5 h-5 text-red-400 animate-pulse" />
         </div>
       )}
 
@@ -61,27 +74,43 @@ function GameClock({ initialTime, increment, isActive, color, playerName, player
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Clock className={`w-5 h-5 ${
-            isCriticalTime ? 'text-red-400' : isLowTime ? 'text-yellow-400' : 'text-white/60'
+            isTimeout ? 'text-red-600' :
+            isCriticalTime ? 'text-red-400' : 
+            isLowTime ? 'text-yellow-400' : 
+            'text-white/60'
           }`} />
           <span className={`text-3xl font-bold tabular-nums ${
-            isCriticalTime ? 'text-red-400' : isLowTime ? 'text-yellow-400' : 'text-white'
+            isTimeout ? 'text-red-600' :
+            isCriticalTime ? 'text-red-400' : 
+            isLowTime ? 'text-yellow-400' : 
+            'text-white'
           }`}>
             {formatTime(timeLeft)}
           </span>
         </div>
         
-        {increment > 0 && (
+        {increment > 0 && !isTimeout && (
           <div className="text-white/60 text-sm">
             +{increment / 1000}s
           </div>
         )}
       </div>
 
+      {/* Timeout Message */}
+      {isTimeout && (
+        <div className="mt-2 text-center">
+          <p className="text-red-400 text-sm font-semibold">Time's up!</p>
+        </div>
+      )}
+
       {/* Time Bar */}
       <div className="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-300 ${
-            isCriticalTime ? 'bg-red-500' : isLowTime ? 'bg-yellow-500' : 'bg-green-500'
+            isTimeout ? 'bg-red-600' :
+            isCriticalTime ? 'bg-red-500' : 
+            isLowTime ? 'bg-yellow-500' : 
+            'bg-green-500'
           }`}
           style={{ width: `${(timeLeft / initialTime) * 100}%` }}
         />
