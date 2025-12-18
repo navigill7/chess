@@ -6,11 +6,11 @@ function useWebSocket(url, options = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
-  const [connectionError, setConnectionError] = useState(null);
 
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
+  const mountedRef = useRef(true);
 
   const {
     onMessage,
@@ -23,6 +23,8 @@ function useWebSocket(url, options = {}) {
   } = options;
 
   const connect = useCallback(() => {
+    if (!mountedRef.current) return;
+
     try {
       const token = localStorage.getItem('token');
       const wsUrl = token
@@ -31,8 +33,8 @@ function useWebSocket(url, options = {}) {
 
       wsRef.current = new WebSocket(wsUrl);
 
-      // WebSocket OPEN
       wsRef.current.onopen = (event) => {
+        if (!mountedRef.current) return;
         console.log('WebSocket connected');
         setIsConnected(true);
         setError(null);
@@ -40,8 +42,8 @@ function useWebSocket(url, options = {}) {
         onOpen?.(event);
       };
 
-      // WebSocket MESSAGE
       wsRef.current.onmessage = (event) => {
+        if (!mountedRef.current) return;
         try {
           const data = JSON.parse(event.data);
           setLastMessage(data);
@@ -51,51 +53,52 @@ function useWebSocket(url, options = {}) {
         }
       };
 
-      // WebSocket ERROR
       wsRef.current.onerror = (event) => {
+        if (!mountedRef.current) return;
         console.error('❌ WebSocket error', event);
         setError('WebSocket connection error');
         onError?.(event);
       };
 
-      // WebSocket CLOSE (IMPORTANT)
       wsRef.current.onclose = (event) => {
+        if (!mountedRef.current) return;
         console.log('🔌 WebSocket disconnected', event.code, event.reason);
         setIsConnected(false);
         onClose?.(event);
 
-        //  Authentication failure → STOP reconnect
+        // Authentication failure → STOP reconnect
         if (event.code === 1008 || event.code === 4001) {
           console.error('❌ Authentication failed - stopping reconnection');
           setError('Session expired. Please login again.');
           localStorage.removeItem('token');
+          localStorage.removeItem('refresh');
           localStorage.removeItem('user');
           reconnectAttemptsRef.current = maxReconnectAttempts;
           return;
         }
 
-        // ✅ Clean manual disconnect → NO reconnect
+        // Clean manual disconnect → NO reconnect
         if (event.code === 1000) {
           console.log('ℹ️ Clean disconnect - no reconnection needed');
           return;
         }
 
-        // 🔁 Reconnect with exponential backoff
-        if (reconnect && reconnectAttemptsRef.current < maxReconnectAttempts) {
+        // Reconnect with exponential backoff
+        if (reconnect && reconnectAttemptsRef.current < maxReconnectAttempts && mountedRef.current) {
           reconnectAttemptsRef.current += 1;
 
-          const backoffDelay =
-            reconnectInterval *
-            Math.pow(1.5, reconnectAttemptsRef.current - 1);
+          const backoffDelay = reconnectInterval * Math.pow(1.5, reconnectAttemptsRef.current - 1);
 
           console.log(
-            `⏳ Reconnecting in ${backoffDelay / 1000}s (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`
+            `Reconnecting in ${backoffDelay / 1000}s (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`
           );
 
           reconnectTimeoutRef.current = setTimeout(() => {
-            connect();
+            if (mountedRef.current) {
+              connect();
+            }
           }, backoffDelay);
-        } else {
+        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
           console.error('❌ Max reconnection attempts reached');
           setError('Unable to connect. Please refresh the page.');
         }
@@ -104,21 +107,12 @@ function useWebSocket(url, options = {}) {
       console.error('❌ Failed to create WebSocket connection', err);
       setError('Failed to connect');
     }
-  }, [
-    url,
-    onMessage,
-    onOpen,
-    onClose,
-    onError,
-    reconnect,
-    reconnectInterval,
-    maxReconnectAttempts,
-  ]);
+  }, [url, onMessage, onOpen, onClose, onError, reconnect, reconnectInterval, maxReconnectAttempts]);
 
-  // Manual Disconnect
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
 
     if (wsRef.current) {
@@ -127,77 +121,35 @@ function useWebSocket(url, options = {}) {
     }
   }, []);
 
-  const handleClose = useCallback((event) => {
-    console.log('WebSocket closed', event.code, event.reason);
-    setIsConnected(false);
-    onClose?.(event);
-
-    // Authentication failure codes - DON'T reconnect
-    if (event.code === 1008 || event.code === 4001) {
-      setConnectionError('Session expired. Please login again.');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh');
-      localStorage.removeItem('user');
-      reconnectAttemptsRef.current = maxReconnectAttempts; // Stop reconnection
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
-      return;
-    }
-
-    // Clean manual disconnect (code 1000) - NO reconnect
-    if (event.code === 1000) {
-      console.log('ℹ️ Clean disconnect - no reconnection needed');
-      return;
-    }
-
-    // Server shutdown or network issues - RETRY with backoff
-    if (reconnect && reconnectAttemptsRef.current < maxReconnectAttempts) {
-      reconnectAttemptsRef.current += 1;
-
-      const backoffDelay =
-        reconnectInterval *
-        Math.pow(1.5, reconnectAttemptsRef.current - 1);
-
-      console.log(
-        `⏳ Reconnecting in ${backoffDelay / 1000}s (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`
-      );
-
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connect();
-      }, backoffDelay);
-    } else {
-      console.error('❌ Max reconnection attempts reached');
-      setError('Unable to connect. Please refresh the page.');
-    }
-  }, [onClose, reconnect, reconnectInterval, maxReconnectAttempts, connect]);
-
-
-  // Send Message
   const send = useCallback((data) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const message =
-        typeof data === 'string' ? data : JSON.stringify(data);
+      const message = typeof data === 'string' ? data : JSON.stringify(data);
       wsRef.current.send(message);
     } else {
       console.error('❌ WebSocket is not connected');
     }
   }, []);
 
-  // Auto Connect / Cleanup
   useEffect(() => {
+    mountedRef.current = true;
     connect();
+
     return () => {
-      disconnect();
+      mountedRef.current = false;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Component unmounted');
+        wsRef.current = null;
+      }
     };
-  }, [connect, disconnect]);
+  }, [connect]);
 
   return {
     isConnected,
     lastMessage,
-    error: wsError || connectionError,
+    error,
     send,
     disconnect,
     reconnect: connect,

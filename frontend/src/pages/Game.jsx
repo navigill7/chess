@@ -13,6 +13,7 @@ import PromotionModal from '../components/chess/PromotionModal';
 
 import Board from '../chess/Board';
 import MoveValidator from '../chess/MoveValidator';
+import { Handshake } from 'lucide-react';
 
 function Game() {
   const { gameId } = useParams();

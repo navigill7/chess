@@ -1,43 +1,39 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-function RatingChangeDisplay({ 
-  playerColor, 
-  oldRating, 
-  newRating, 
-  playerName 
-}) {
+function RatingChangeDisplay({ playerColor, oldRating, newRating, playerName }) {
   const change = newRating - oldRating;
   const isPositive = change > 0;
   const isNegative = change < 0;
   
   if (change === 0) {
     return (
-      <div className="flex items-center space-x-2 text-white/70">
-        <Minus className="w-4 h-4" />
-        <span className="font-semibold">{playerName}</span>
-        <span className="text-white/50">({oldRating})</span>
-        <span className="text-yellow-400">No change</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.7)' }}>
+        <Minus style={{ width: '16px', height: '16px' }} />
+        <span style={{ fontWeight: '600' }}>{playerName}</span>
+        <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>({oldRating})</span>
+        <span style={{ color: '#fbbf24' }}>No change</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center space-x-2">
-      {isPositive && <TrendingUp className="w-5 h-5 text-green-400" />}
-      {isNegative && <TrendingDown className="w-5 h-5 text-red-400" />}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {isPositive && <TrendingUp style={{ width: '20px', height: '20px', color: '#4ade80' }} />}
+      {isNegative && <TrendingDown style={{ width: '20px', height: '20px', color: '#f87171' }} />}
       
-      <span className="font-semibold text-white">{playerName}</span>
+      <span style={{ fontWeight: '600', color: 'white' }}>{playerName}</span>
       
-      <div className="flex items-center space-x-1">
-        <span className="text-white/50">{oldRating}</span>
-        <span className="text-white/30">→</span>
-        <span className="text-white font-bold">{newRating}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{oldRating}</span>
+        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>→</span>
+        <span style={{ color: 'white', fontWeight: 'bold' }}>{newRating}</span>
       </div>
       
-      <span className={`font-bold ${
-        isPositive ? 'text-green-400' : 'text-red-400'
-      }`}>
+      <span style={{ 
+        fontWeight: 'bold', 
+        color: isPositive ? '#4ade80' : '#f87171' 
+      }}>
         {isPositive ? '+' : ''}{change}
       </span>
     </div>

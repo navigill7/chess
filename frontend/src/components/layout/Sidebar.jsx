@@ -1,17 +1,51 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Trophy, Eye, Users, User, Target, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchFriends();
+    }
+  }, [user]);
+
+  const fetchFriends = async () => {
+    try {
+      const response = await api.get('/auth/friends/');
+      // Take only online friends, limit to 3
+      const onlineFriends = response
+        .map(f => ({
+          id: f.friend.id,
+          username: f.friend.username,
+          rating: f.friend.rating,
+          isOnline: f.friend.is_online,
+        }))
+        .filter(f => f.isOnline)
+        .slice(0, 3);
+      
+      setFriends(onlineFriends);
+    } catch (error) {
+      console.error('Failed to fetch friends:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const menuItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Trophy, label: 'Tournaments', path: '/lobby' },
     { icon: Eye, label: 'Spectate', path: '/spectate' },
     { icon: Users, label: 'Friends', path: '/friends' },
-    { icon: User, label: 'Profile', path: '/profile/me' },
+    { icon: User, label: 'Profile', path: `/profile/${user?.username || 'me'}` },
     { icon: Target, label: 'Puzzles', path: '/puzzles' },
     { icon: BookOpen, label: 'Learn', path: '/learn' },
   ];
@@ -57,40 +91,64 @@ function Sidebar() {
       {/* Online Friends Section */}
       {!isCollapsed && (
         <div className="px-4 py-6 border-t border-white/10">
-          <h3 className="text-white/60 text-xs font-semibold uppercase mb-3">Online Friends</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white/60 text-xs font-semibold uppercase">Online Friends</h3>
+            {friends.length > 0 && (
+              <button
+                onClick={() => navigate('/friends')}
+                className="text-purple-400 hover:text-purple-300 text-xs transition-colors"
+              >
+                View All
+              </button>
+            )}
+          </div>
           <div className="space-y-2">
-            {/* Mock friends - replace with real data */}
-            {['GrandMaster99', 'ChessKing', 'PawnStorm'].map((friend, idx) => (
-              <div key={idx} className="flex items-center space-x-2 px-2 py-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
-                <div className="relative">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">
-                    {friend[0]}
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-slate-900"></div>
-                </div>
-                <span className="text-white/80 text-sm">{friend}</span>
+            {loading ? (
+              <div className="text-white/40 text-xs text-center py-4">Loading...</div>
+            ) : friends.length === 0 ? (
+              <div className="text-white/40 text-xs text-center py-4">
+                No friends online
               </div>
-            ))}
+            ) : (
+              friends.map((friend) => (
+                <div
+                  key={friend.id}
+                  onClick={() => navigate(`/profile/${friend.username}`)}
+                  className="flex items-center space-x-2 px-2 py-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+                      {friend.username[0].toUpperCase()}
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-slate-900"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white/80 text-sm truncate">{friend.username}</p>
+                    <p className="text-white/40 text-xs">{friend.rating}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
 
-      {/* Stats Section */}
-      {!isCollapsed && (
+      {/* Your Stats */}
+      {!isCollapsed && user && (
         <div className="px-4 py-6 border-t border-white/10">
           <h3 className="text-white/60 text-xs font-semibold uppercase mb-3">Your Stats</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-white/70">
               <span>Rating</span>
-              <span className="font-bold text-yellow-400">1450</span>
+              <span className="font-bold text-yellow-400">{user.rating || 800}</span>
             </div>
             <div className="flex justify-between text-white/70">
               <span>Games</span>
-              <span className="font-bold text-white">247</span>
+              <span className="font-bold text-white">{user.games_played || 0}</span>
             </div>
             <div className="flex justify-between text-white/70">
               <span>Win Rate</span>
-              <span className="font-bold text-green-400">58%</span>
+              <span className="font-bold text-green-400">{user.win_rate || 0}%</span>
             </div>
           </div>
         </div>
