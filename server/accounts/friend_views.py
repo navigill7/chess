@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from .models import Friendship, FriendRequest
 from .friend_serializers import FriendshipSerializer, FriendRequestSerializer, FriendUserSerializer
+from .redis_pubsub import notify_user_via_channel
 
 User = get_user_model()
 
@@ -97,6 +98,18 @@ def send_friend_request(request):
         from_user=request.user,
         to_user=to_user
     )
+
+    notify_user_via_channel(to_user.id, {
+        'type': 'friend_request_received',
+        'request_id': friend_request.id,
+        'from_user': {
+            'id': request.user.id,
+            'username': request.user.username,
+            'avatar': request.user.avatar.url if request.user.avatar else None,
+            'rating': request.user.rating,
+        },
+        'created_at': friend_request.created_at.isoformat(),
+    })
     
     serializer = FriendRequestSerializer(friend_request)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -120,6 +133,14 @@ def accept_friend_request(request):
         to_user=request.user,
         status='pending'
     )
+
+    notify_user_via_channel(friend_request.from_user.id, {
+        'type': 'friend_request_accepted',
+        'accepted_by': {
+            'id': request.user.id,
+            'username': request.user.username,
+        }
+    })
     
     # Update request status
     friend_request.status = 'accepted'

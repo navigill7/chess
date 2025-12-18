@@ -102,9 +102,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         }))
     
     async def make_move(self, payload):
-        """Handle move from player - FIXED VERSION"""
-        from django.db import transaction
-        
+        """Handle move from player - FIXED TO PREVENT RECURSION"""
         game = await self.get_game()
         if not game or game.status != 'ongoing':
             await self.send(json.dumps({
@@ -127,7 +125,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         
         try:
-            # CRITICAL: Capture color BEFORE state changes
+            # CRITICAL FIX: Capture color BEFORE state changes
             moving_color = game.current_turn
             
             # Validate move
@@ -152,16 +150,22 @@ class GameConsumer(AsyncWebsocketConsumer):
             
             # Save move and update game
             move = await self.save_move(game, from_square, to_square, result, moving_color)
-            await self.update_game(game, result['fen'], result.get('status'))
+            await self.update_game_state(
+                game.game_id, 
+                result['fen'], 
+                result.get('status'),
+                game.white_time_left,
+                game.black_time_left
+            )
             
-            # Refresh game state
+            # FIXED: Get fresh game state once
             game = await self.get_game()
             
-            # Broadcast to all clients
-            await self.channel_layer.group_send(
+            # Broadcast to all clients - CRITICAL: Use send_group_message to avoid recursion
+            await self.send_group_message(
                 self.room_group_name,
                 {
-                    'type': 'move_made_event',
+                    'type': 'game_move_broadcast',  # Changed type name to avoid conflicts
                     'move': {
                         'from': from_square,
                         'to': to_square,
@@ -182,7 +186,9 @@ class GameConsumer(AsyncWebsocketConsumer):
             )
             
         except Exception as e:
-            print(f"Move error: {e}")
+            print(f"❌ Move error: {e}")
+            import traceback
+            traceback.print_exc()
             await self.send(json.dumps({
                 'type': 'error',
                 'message': f'Move failed: {str(e)}'
@@ -239,19 +245,152 @@ class GameConsumer(AsyncWebsocketConsumer):
         }))
     
     async def resign(self):
-        """Handle resignation"""
         game = await self.get_game()
-        # TODO: Implement
-        pass
+        
+        if not game or game.status != 'ongoing':
+            await self.send(json.dumps({
+                'type': 'error',
+                'message': 'Game is not ongoing'
+            }))
+            return
+        
+        # Determine who resigned and who won
+        resigning_user = self.scope['user']
+        
+        if game.white_player.id == resigning_user.id:
+            winner = game.black_player
+            winner_color = 'black'
+            result = '0-1'
+        elif game.black_player.id == resigning_user.id:
+            winner = game.white_player
+            winner_color = 'white'
+            result = '1-0'
+        else:
+            await self.send(json.dumps({
+                'type': 'error',
+                'message': 'You are not a player in this game'
+            }))
+            return
+        
+        # Update game status
+        await self.end_game(
+            game.game_id,
+            status='completed',
+            result=result,
+            winner=winner,
+            termination='resignation'
+        )
+        
+        # Broadcast to all players
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'game_ended_broadcast',
+                'status': 'completed',
+                'winner': winner_color,
+                'termination': 'resignation',
+                'result': result,
+                'message': f'{resigning_user.username} resigned'
+            }
+        )
+
     
     async def offer_draw(self):
-        """Handle draw offer"""
-        # TODO: Implement
-        pass
+        game = await self.get_game()
+        
+        if not game or game.status != 'ongoing':
+            await self.send(json.dumps({
+                'type': 'error',
+                'message': 'Game is not ongoing'
+            }))
+            return
+        
+        offering_user = self.scope['user']
+        
+        # Determine who made the offer
+        if game.white_player.id == offering_user.id:
+            offer_from = 'white'
+        elif game.black_player.id == offering_user.id:
+            offer_from = 'black'
+        else:
+            await self.send(json.dumps({
+                'type': 'error',
+                'message': 'You are not a player in this game'
+            }))
+            return
+        
+        # Broadcast draw offer to all players
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'draw_offer_broadcast',
+                'offer_from': offer_from,
+                'username': offering_user.username,
+            }
+        )
+
+    async def accept_draw(self):
+        game = await self.get_game()
+        
+        if not game or game.status != 'ongoing':
+            await self.send(json.dumps({
+                'type': 'error',
+                'message': 'Game is not ongoing'
+            }))
+            return
+        
+        # Update game to draw
+        await self.end_game(
+            game.game_id,
+            status='completed',
+            result='1/2-1/2',
+            winner=None,
+            termination='agreement'
+        )
+        
+        # Broadcast game ended
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'game_ended_broadcast',
+                'status': 'completed',
+                'winner': None,
+                'termination': 'agreement',
+                'result': '1/2-1/2',
+                'message': 'Draw by agreement'
+            }
+        )
+
+    async def decline_draw(self):
+        """Decline draw offer - NEW FUNCTION"""
+        # Broadcast draw declined
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'draw_declined_broadcast',
+                'message': 'Draw offer declined'
+            }
+        )
     
-    # Event handlers (called by channel layer)
-    async def move_made_event(self, event):
-        """Send move to client - FIXED SIGNATURE"""
+    # Event handlers
+    async def draw_offer_broadcast(self, event):
+        """Send draw offer to client"""
+        await self.send(json.dumps({
+            'type': 'draw_offer',
+            'offer_from': event['offer_from'],
+            'username': event['username'],
+        }))
+    
+    async def draw_declined_broadcast(self, event):
+        """Send draw declined to client"""
+        await self.send(json.dumps({
+            'type': 'draw_declined',
+            'message': event['message'],
+        }))
+    
+    # FIXED: Event handlers with unique names to avoid recursion
+    async def game_move_broadcast(self, event):
+        """Send move to client - FIXED to prevent recursion"""
         await self.send(json.dumps({
             'type': 'move_made',
             'move': event['move'],
@@ -274,6 +413,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             'winner': event.get('winner'),
             'termination': event.get('termination'),
         }))
+    
+    # Helper to send group messages
+    async def send_group_message(self, group_name, message):
+        """Send message to group via channel layer"""
+        await self.channel_layer.group_send(group_name, message)
     
     # Database operations
     @database_sync_to_async
@@ -313,13 +457,21 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
     
     @database_sync_to_async
-    def update_game(self, game, fen, status):
+    def update_game_state(self, game_id, fen, status, white_time, black_time):
+        """FIXED: Update game in single atomic operation"""
+        from .models import Game
+        
+        game = Game.objects.get(game_id=game_id)
         game.current_fen = fen
         game.move_count += 1
         game.current_turn = 'black' if game.current_turn == 'white' else 'white'
+        game.white_time_left = white_time
+        game.black_time_left = black_time
+        
         if status and status != 'ongoing':
             game.status = status
             game.ended_at = timezone.now()
+        
         game.save()
     
     @database_sync_to_async
@@ -331,6 +483,81 @@ class GameConsumer(AsyncWebsocketConsumer):
     def release_move_lock(self, game_id):
         from django.core.cache import cache
         cache.delete(f'move_lock_{game_id}')
+
+    @database_sync_to_async
+    def end_game(self, game_id, status, result, winner, termination):
+        """End the game with given parameters"""
+        from .models import Game
+        
+        game = Game.objects.get(game_id=game_id)
+        game.status = status
+        game.result = result
+        game.winner = winner
+        game.termination = termination
+        game.ended_at = timezone.now()
+        
+        # Calculate rating changes if needed
+        if result != '1/2-1/2':
+            white_rating_change, black_rating_change = self._calculate_rating_changes(
+                game.white_rating_before,
+                game.black_rating_before,
+                result
+            )
+            
+            game.white_rating_after = game.white_rating_before + white_rating_change
+            game.black_rating_after = game.black_rating_before + black_rating_change
+            
+            # Update player ratings
+            game.white_player.rating = game.white_rating_after
+            game.black_player.rating = game.black_rating_after
+            
+            # Update statistics
+            if result == '1-0':
+                game.white_player.games_won += 1
+                game.black_player.games_lost += 1
+            else:
+                game.black_player.games_won += 1
+                game.white_player.games_lost += 1
+            
+            game.white_player.games_played += 1
+            game.black_player.games_played += 1
+            
+            game.white_player.save()
+            game.black_player.save()
+        else:
+            # Draw
+            game.white_rating_after = game.white_rating_before
+            game.black_rating_after = game.black_rating_before
+            
+            game.white_player.games_drawn += 1
+            game.black_player.games_drawn += 1
+            game.white_player.games_played += 1
+            game.black_player.games_played += 1
+            
+            game.white_player.save()
+            game.black_player.save()
+        
+        game.save()
+
+    def _calculate_rating_changes(self, white_rating, black_rating, result):
+        """Calculate ELO rating changes"""
+        K = 32  # K-factor
+        
+        # Expected scores
+        expected_white = 1 / (1 + 10 ** ((black_rating - white_rating) / 400))
+        expected_black = 1 - expected_white
+        
+        # Actual scores
+        if result == '1-0':
+            actual_white, actual_black = 1, 0
+        else:  # '0-1'
+            actual_white, actual_black = 0, 1
+        
+        # Rating changes
+        white_change = round(K * (actual_white - expected_white))
+        black_change = round(K * (actual_black - expected_black))
+        
+        return white_change, black_change
 
 
 class GameClockManager:
@@ -417,8 +644,93 @@ class GameClockManager:
         game.save(update_fields=['white_time_left', 'black_time_left'])
     
     async def _handle_timeout(self, game):
-        # TODO: Implement timeout logic
-        pass
+        """Handle timeout - IMPLEMENTED"""
+        from channels.layers import get_channel_layer
+        
+        channel_layer = get_channel_layer()
+        
+        # Determine winner based on who ran out of time
+        if game.white_time_left == 0:
+            winner = game.black_player
+            winner_color = 'black'
+            result = '0-1'
+        else:
+            winner = game.white_player
+            winner_color = 'white'
+            result = '1-0'
+        
+        # Update game in database
+        await self._end_game_on_timeout(game.game_id, result, winner)
+        
+        # Broadcast game ended
+        await channel_layer.group_send(
+            f'game_{self.game_id}',
+            {
+                'type': 'game_ended_broadcast',
+                'status': 'completed',
+                'winner': winner_color,
+                'termination': 'timeout',
+                'result': result,
+                'message': f'{winner.username} won on time'
+            }
+        )
+    
+    @database_sync_to_async
+    def _end_game_on_timeout(self, game_id, result, winner):
+        """End game due to timeout"""
+        from .models import Game
+        
+        game = Game.objects.get(game_id=game_id)
+        game.status = 'completed'
+        game.result = result
+        game.winner = winner
+        game.termination = 'timeout'
+        game.ended_at = timezone.now()
+        
+        # Calculate rating changes
+        white_rating_change, black_rating_change = self._calculate_rating_changes_sync(
+            game.white_rating_before,
+            game.black_rating_before,
+            result
+        )
+        
+        game.white_rating_after = game.white_rating_before + white_rating_change
+        game.black_rating_after = game.black_rating_before + black_rating_change
+        
+        # Update player ratings and statistics
+        game.white_player.rating = game.white_rating_after
+        game.black_player.rating = game.black_rating_after
+        
+        if result == '1-0':
+            game.white_player.games_won += 1
+            game.black_player.games_lost += 1
+        else:
+            game.black_player.games_won += 1
+            game.white_player.games_lost += 1
+        
+        game.white_player.games_played += 1
+        game.black_player.games_played += 1
+        
+        game.white_player.save()
+        game.black_player.save()
+        game.save()
+    
+    def _calculate_rating_changes_sync(self, white_rating, black_rating, result):
+        """Calculate ELO rating changes (sync version)"""
+        K = 32
+        
+        expected_white = 1 / (1 + 10 ** ((black_rating - white_rating) / 400))
+        expected_black = 1 - expected_white
+        
+        if result == '1-0':
+            actual_white, actual_black = 1, 0
+        else:
+            actual_white, actual_black = 0, 1
+        
+        white_change = round(K * (actual_white - expected_white))
+        black_change = round(K * (actual_black - expected_black))
+        
+        return white_change, black_change
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):

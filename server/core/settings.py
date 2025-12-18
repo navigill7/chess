@@ -152,7 +152,7 @@ REST_FRAMEWORK = {
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
 }
 
-# JWT Settings - CRITICAL CONFIGURATION
+# JWT Settings - FIXED CONFIGURATION
 SIMPLE_JWT = {
     # Token lifetimes
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
@@ -163,10 +163,10 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh token
     'UPDATE_LAST_LOGIN': True,  # Update user's last_login on token obtain
     
-    # Algorithm
+    # Algorithm - CRITICAL: This must match for signing and verification
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
+    'SIGNING_KEY': SECRET_KEY,  # This is used to sign tokens
+    'VERIFYING_KEY': None,  # None means use SIGNING_KEY (for symmetric algorithms)
     'AUDIENCE': None,
     'ISSUER': None,
     
@@ -183,13 +183,14 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
     
-    # Sliding tokens (not used, but configured)
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
-    
     # JTI (JWT ID) for tracking
     'JTI_CLAIM': 'jti',
+    
+    # Token validation
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    
+    # Leeway for token expiration (helps with clock skew)
+    'LEEWAY': 0,
 }
 
 # CORS Settings

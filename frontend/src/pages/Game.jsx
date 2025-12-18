@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import useWebSocket from '../hooks/useWebSocket';
+import useWebSocket from '../services/socketService';
 
 import ChessBoard from '../components/chess/ChessBoard';
 import GameClock from '../components/chess/GameClock';
@@ -52,7 +52,7 @@ function Game() {
   const [connectionError, setConnectionError] = useState(null);
   const [chatMessageHandler, setChatMessageHandler] = useState(null);
 
-  // ==================== HANDLER FUNCTIONS ====================
+  // HANDLER FUNCTIONS
   // Define all handler functions before WebSocket setup to avoid circular dependencies
 
   const initializeGame = useCallback((data) => {
