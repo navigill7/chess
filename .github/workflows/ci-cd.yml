@@ -131,7 +131,7 @@ jobs:
       - name: Run linting
         run: |
           cd frontend
-          npm run lint || true
+          npm run lint || echo "Linting failed but continuing..."
 
       - name: Run frontend tests
         run: |
