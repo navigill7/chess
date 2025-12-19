@@ -35,9 +35,7 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+    image: ${ECR_REGISTRY}/${ECR_BACKEND_REPOSITORY}:${IMAGE_TAG:-latest}
     container_name: chess_backend
     environment:
       - DEBUG=False
@@ -66,9 +64,7 @@ services:
              daphne -b 0.0.0.0 -p 8000 core.asgi:application"
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ${ECR_REGISTRY}/${ECR_FRONTEND_REPOSITORY}:${IMAGE_TAG:-latest}
     container_name: chess_frontend
     ports:
       - "80:80"
@@ -78,8 +74,6 @@ services:
     networks:
       - chess_network
     restart: unless-stopped
-    volumes:
-      - ./ssl:/etc/nginx/ssl:ro
 
 networks:
   chess_network:
