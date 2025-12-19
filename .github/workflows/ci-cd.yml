@@ -74,7 +74,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -f Dockerfile.backend -t $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG .
+          docker build -f server/Dockerfile -t $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG ./server
           docker tag $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest
 
       - name: Scan Docker image for vulnerabilities
@@ -118,29 +118,29 @@ jobs:
       - name: Cache Node modules
         uses: actions/cache@v4
         with:
-          path: client/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: |
-          cd client
+          cd frontend
           npm ci
 
       - name: Run linting
         run: |
-          cd client
+          cd frontend
           npm run lint || true
 
       - name: Run frontend tests
         run: |
-          cd client
+          cd frontend
           npm test -- --passWithNoTests
 
       - name: Build frontend
         run: |
-          cd client
+          cd frontend
           npm run build
 
       - name: Configure AWS credentials
@@ -159,7 +159,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -f Dockerfile.frontend -t $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG .
+          docker build -f frontend/Dockerfile -t $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG ./frontend
           docker tag $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest
 
       - name: Scan Docker image for vulnerabilities
@@ -264,5 +264,3 @@ jobs:
             echo "❌ Deployment failed! Health check returned: $HTTP_STATUS"
             exit 1
           fi
-
-      
