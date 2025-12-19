@@ -22,7 +22,6 @@ class ApiService {
         return headers;
     }
 
-    // NEW: Process queued requests after refresh
     processQueue(error, token = null) {
         this.failedQueue.forEach(prom => {
             if (error) {
@@ -34,14 +33,13 @@ class ApiService {
         this.failedQueue = [];
     }
 
-    // NEW: Refresh token logic
     async refreshToken() {
         const refresh = localStorage.getItem('refresh');
         if (!refresh) {
             throw new Error('No refresh token');
         }
 
-        const response = await fetch(`${this.baseUrl}/auth/refresh/`, {
+        const response = await fetch(`${this.baseUrl}/auth/token/refresh/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh }),
@@ -69,16 +67,13 @@ class ApiService {
         try {
             const response = await fetch(url, config);
 
-            // IMPROVED: Handle 401 with token refresh
             if (response.status === 401 && options.auth !== false) {
-                // Don't retry refresh endpoint itself
-                if (endpoint === '/auth/refresh/') {
+                if (endpoint === '/auth/token/refresh/') {
                     localStorage.clear();
                     window.location.href = '/login';
                     throw new Error('Session expired');
                 }
 
-                // If already refreshing, queue this request
                 if (this.isRefreshing) {
                     return new Promise((resolve, reject) => {
                         this.failedQueue.push({ resolve, reject });
@@ -92,7 +87,6 @@ class ApiService {
                     });
                 }
 
-                // Try to refresh token
                 this.isRefreshing = true;
 
                 try {
@@ -100,7 +94,6 @@ class ApiService {
                     this.isRefreshing = false;
                     this.processQueue(null, newToken);
 
-                    // Retry original request with new token
                     config.headers['Authorization'] = `Bearer ${newToken}`;
                     const retryResponse = await fetch(url, config);
                     
@@ -114,7 +107,6 @@ class ApiService {
                     this.isRefreshing = false;
                     this.processQueue(refreshError, null);
                     
-                    // Refresh failed - logout
                     localStorage.clear();
                     window.location.href = '/login';
                     throw new Error('Session expired');
@@ -123,7 +115,7 @@ class ApiService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Request failed');
+                throw new Error(error.message || error.error || 'Request failed');
             }
 
             return await response.json();
@@ -153,8 +145,166 @@ class ApiService {
         });
     }
 
+    async put(endpoint, data, options = {}) {
+        return this.request(endpoint, {
+            ...options,
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    }
+
     async delete(endpoint, options = {}) {
         return this.request(endpoint, { ...options, method: "DELETE"});
+    }
+
+    // ==================== AUTH METHODS ====================
+    async register(userData) {
+        return this.post('/auth/register/', userData, { auth: false });
+    }
+
+    async login(email, password) {
+        return this.post('/auth/login/', { email, password }, { auth: false });
+    }
+
+    async googleAuth(token) {
+        return this.post('/auth/google/', { token }, { auth: false });
+    }
+
+    async logout(refreshToken) {
+        return this.post('/auth/logout/', { refresh: refreshToken });
+    }
+
+    async getCurrentUser() {
+        return this.get('/auth/me/');
+    }
+
+    async updateProfile(data) {
+        return this.put('/auth/profile/update/', data);
+    }
+
+    async changePassword(oldPassword, newPassword) {
+        return this.post('/auth/password/change/', {
+            old_password: oldPassword,
+            new_password: newPassword
+        });
+    }
+
+    async getUserProfile(username) {
+        return this.get(`/auth/users/${username}/`, { auth: false });
+    }
+
+    // ==================== FRIENDS METHODS ====================
+    async getFriends() {
+        return this.get('/auth/friends/');
+    }
+
+    async getFriendRequests() {
+        return this.get('/auth/friends/requests/');
+    }
+
+    async sendFriendRequest(username) {
+        return this.post('/auth/friends/request/', { username });
+    }
+
+    async acceptFriendRequest(requestId) {
+        return this.post('/auth/friends/accept/', { request_id: requestId });
+    }
+
+    async rejectFriendRequest(requestId) {
+        return this.post('/auth/friends/reject/', { request_id: requestId });
+    }
+
+    async removeFriend(userId) {
+        return this.delete(`/auth/friends/${userId}/`);
+    }
+
+    async searchUsers(query) {
+        return this.get(`/auth/users/search/?q=${encodeURIComponent(query)}`);
+    }
+
+    // ==================== GAME METHODS ====================
+    async listGames(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.get(`/game/games/${queryString ? `?${queryString}` : ''}`);
+    }
+
+    async getGame(gameId) {
+        return this.get(`/game/games/${gameId}/`);
+    }
+
+    async getGameMoves(gameId) {
+        return this.get(`/game/games/${gameId}/moves/`);
+    }
+
+    async getUserGames(username) {
+        return this.get(`/game/user-games/${username}/`);
+    }
+
+    // ==================== CHALLENGE METHODS ====================
+    async sendChallenge(friendId, timeControl) {
+        return this.post('/game/challenges/send/', {
+            friend_id: friendId,
+            time_control: timeControl
+        });
+    }
+
+    async getPendingChallenges() {
+        return this.get('/game/challenges/pending/');
+    }
+
+    async acceptChallenge(challengeId) {
+        return this.post(`/game/challenges/accept/${challengeId}/`);
+    }
+
+    async rejectChallenge(challengeId) {
+        return this.post(`/game/challenges/reject/${challengeId}/`);
+    }
+
+    async cancelChallenge(challengeId) {
+        return this.post(`/game/challenges/${challengeId}/cancel/`);
+    }
+
+    // ==================== UTILITY METHODS ====================
+    async uploadFile(endpoint, file, additionalData = {}) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        Object.keys(additionalData).forEach(key => {
+            formData.append(key, additionalData[key]);
+        });
+
+        const url = `${this.baseUrl}${endpoint}`;
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Upload failed');
+        }
+
+        return await response.json();
+    }
+
+    // ==================== HELPER METHODS ====================
+    isAuthenticated() {
+        return !!localStorage.getItem('token');
+    }
+
+    getToken() {
+        return localStorage.getItem('token');
+    }
+
+    clearAuth() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh');
+        localStorage.removeItem('user');
     }
 }
 

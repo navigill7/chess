@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Trophy, Eye, Users, User, Target, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
-import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -20,21 +20,25 @@ function Sidebar() {
 
   const fetchFriends = async () => {
     try {
+      setLoading(true);
       const response = await api.get('/auth/friends/');
-      // Take only online friends, limit to 3
+      
+      // Extract online friends from response
       const onlineFriends = response
         .map(f => ({
           id: f.friend.id,
           username: f.friend.username,
           rating: f.friend.rating,
           isOnline: f.friend.is_online,
+          avatar: f.friend.avatar,
         }))
         .filter(f => f.isOnline)
-        .slice(0, 3);
+        .slice(0, 3); // Show only top 3 online friends
       
       setFriends(onlineFriends);
     } catch (error) {
       console.error('Failed to fetch friends:', error);
+      setFriends([]);
     } finally {
       setLoading(false);
     }
@@ -117,9 +121,17 @@ function Sidebar() {
                   className="flex items-center space-x-2 px-2 py-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">
-                      {friend.username[0].toUpperCase()}
-                    </div>
+                    {friend.avatar ? (
+                      <img 
+                        src={friend.avatar} 
+                        alt={friend.username}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+                        {friend.username[0].toUpperCase()}
+                      </div>
+                    )}
                     <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-slate-900"></div>
                   </div>
                   <div className="flex-1 min-w-0">

@@ -8,9 +8,13 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# CRITICAL FIX: Ensure SECRET_KEY is properly set
 SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY must be set in environment variables")
+
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Google OAuth Configuration
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
@@ -30,7 +34,7 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',  # Important for logout
+    'rest_framework_simplejwt.token_blacklist',
     
     # Local apps
     'accounts',
@@ -152,51 +156,44 @@ REST_FRAMEWORK = {
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
 }
 
-# JWT Settings - FIXED CONFIGURATION
+# FIXED JWT Settings - Simplified and Correct
 SIMPLE_JWT = {
     # Token lifetimes
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     
     # Token rotation
-    'ROTATE_REFRESH_TOKENS': True,  # Generate new refresh token on refresh
-    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh token
-    'UPDATE_LAST_LOGIN': True,  # Update user's last_login on token obtain
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
     
-    # Algorithm - CRITICAL: This must match for signing and verification
+    # CRITICAL: Use HS256 (symmetric) algorithm
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,  # This is used to sign tokens
-    'VERIFYING_KEY': None,  # None means use SIGNING_KEY (for symmetric algorithms)
-    'AUDIENCE': None,
-    'ISSUER': None,
+    'SIGNING_KEY': SECRET_KEY,  # This will be used for both signing and verification
+    'VERIFYING_KEY': None,  # None for symmetric algorithms
     
     # Headers
-    'AUTH_HEADER_TYPES': ('Bearer',),  # Use "Bearer <token>" in Authorization header
+    'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     
-    # Token claims
-    'USER_ID_FIELD': 'id',  # User model field used for user_id claim
-    'USER_ID_CLAIM': 'user_id',  # Claim name in token payload
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    # User identification
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
     
     # Token types
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
     
-    # JTI (JWT ID) for tracking
+    # JTI for token tracking
     'JTI_CLAIM': 'jti',
-    
-    # Token validation
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-    
-    # Leeway for token expiration (helps with clock skew)
-    'LEEWAY': 0,
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    'CORS_ALLOWED_ORIGINS', ''
-).split(',')
+CORS_ALLOWED_ORIGINS = [
+    origin.strip() 
+    for origin in os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+    if origin.strip()
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -227,7 +224,7 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-SITE_URL = os.environ.get('SITE_URL')
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:3000')
 
 # Logging
 LOGGING = {

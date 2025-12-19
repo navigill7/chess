@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import useWebSocket from '../services/socketService';
@@ -56,17 +56,16 @@ function Game() {
   const [drawOffer, setDrawOffer] = useState(null);
   const [showDrawOfferModal, setShowDrawOfferModal] = useState(false);
 
-  // HANDLER FUNCTIONS
-  // Define all handler functions before WebSocket setup to avoid circular dependencies
+  // Ref to store the send function
+  const sendRef = useRef(null);
 
+  // HANDLER FUNCTIONS
   const initializeGame = useCallback((data) => {
     console.log('Initializing game with data:', data);
     
-    // Set players
     setWhitePlayer(data.white_player);
     setBlackPlayer(data.black_player);
 
-    // Determine player color
     if (user?.id === data.white_player?.id) {
       setPlayerColor('white');
       setIsSpectator(false);
@@ -78,21 +77,17 @@ function Game() {
       setPlayerColor('white');
     }
 
-    // Load board from FEN
     const newBoard = new Board(data.fen);
     setBoard(newBoard);
     setValidator(new MoveValidator(newBoard));
 
-    // Set time control
     setWhiteTime(data.white_time);
     setBlackTime(data.black_time);
     setTimeIncrement(data.increment);
 
-    // Load move history
     setMoves(data.moves || []);
     setCurrentMoveIndex((data.moves?.length || 1) - 1);
 
-    // Set game state
     setGameState({
       status: data.status,
       turn: data.current_turn || newBoard.turn,
@@ -111,12 +106,9 @@ function Game() {
       return;
     }
     
-    // Remove optimistic move and replace with confirmed move
     setMoves(prev => {
-      // Filter out optimistic moves
       const confirmed = prev.filter(m => !m.optimistic);
       
-      // Add server-confirmed move
       const serverMove = {
         from: moveData.from,
         to: moveData.to,
@@ -131,7 +123,6 @@ function Game() {
       return [...confirmed, serverMove];
     });
     
-    // Update board from FEN if provided
     if (data.fen) {
       const newBoard = new Board(data.fen);
       setBoard(newBoard);
@@ -140,7 +131,6 @@ function Game() {
     
     setCurrentMoveIndex(prev => prev + 1);
 
-    // Update clock times (authoritative from server)
     if (data.white_time !== undefined) {
       setWhiteTime(data.white_time);
     }
@@ -148,7 +138,6 @@ function Game() {
       setBlackTime(data.black_time);
     }
 
-    // Update game state
     setGameState(prev => ({
       ...prev,
       status: moveData.status || prev.status,
@@ -176,26 +165,16 @@ function Game() {
     }));
   }, []);
 
-const handleGameEnd = useCallback((data) => {
-  setGameState(prev => ({
-    ...prev,
-    status: data.status,
-    winner: data.winner,
-    reason: data.reason || data.termination,
-  }));
+  const handleGameEnd = useCallback((data) => {
+    setGameState(prev => ({
+      ...prev,
+      status: data.status,
+      winner: data.winner,
+      reason: data.reason || data.termination,
+    }));
 
-  if (data.rating_changes) {
-    console.log('Rating changes:', data.rating_changes);
-  }
-  }, []);
-
-  const rollbackOptimisticMove = useCallback((sendFunc) => {
-    // Remove last optimistic move and restore board state
-    setMoves(prev => prev.filter(m => !m.optimistic));
-    
-    // Request current state from server
-    if (sendFunc) {
-      sendFunc({ type: 'join_game' });
+    if (data.rating_changes) {
+      console.log('Rating changes:', data.rating_changes);
     }
   }, []);
 
@@ -255,7 +234,6 @@ const handleGameEnd = useCallback((data) => {
   }, [chatMessageHandler, initializeGame, handleOpponentMove, applyStateSnapshot, handleGameEnd]);
 
   // WEBSOCKET SETUP
-
   const handleOpen = useCallback(() => {
     console.log('WebSocket connected');
     setConnectionError(null);
@@ -278,25 +256,6 @@ const handleGameEnd = useCallback((data) => {
     }
   }, [navigate]);
 
-  const handleAcceptDraw = useCallback(() => {
-    if (send) {
-      send({ type: 'accept_draw' });
-      setShowDrawOfferModal(false);
-      setDrawOffer(null);
-    }
-  }, [send]);
-
-  // 4. ADD NEW HANDLER FOR DECLINING DRAW
-  // ADD this new function after handleAcceptDraw
-
-  const handleDeclineDraw = useCallback(() => {
-    if (send) {
-      send({ type: 'decline_draw' });
-      setShowDrawOfferModal(false);
-      setDrawOffer(null);
-    }
-  }, [send]);
-
   const { isConnected, lastMessage, send, error: wsError } = useWebSocket(`/ws/game/${gameId}/`, {
     onOpen: handleOpen,
     onMessage: handleMessage,
@@ -307,6 +266,11 @@ const handleGameEnd = useCallback((data) => {
     maxReconnectAttempts: 3,
   });
 
+  // Store send function in ref
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
+
   // Send join_game after WebSocket is connected
   useEffect(() => {
     if (isConnected && send) {
@@ -315,8 +279,24 @@ const handleGameEnd = useCallback((data) => {
     }
   }, [isConnected, send]);
 
-  // GAME LOGIC
+  // Handler callbacks that use send
+  const handleAcceptDraw = useCallback(() => {
+    if (sendRef.current) {
+      sendRef.current({ type: 'accept_draw' });
+      setShowDrawOfferModal(false);
+      setDrawOffer(null);
+    }
+  }, []);
 
+  const handleDeclineDraw = useCallback(() => {
+    if (sendRef.current) {
+      sendRef.current({ type: 'decline_draw' });
+      setShowDrawOfferModal(false);
+      setDrawOffer(null);
+    }
+  }, []);
+
+  // GAME LOGIC
   const handleMove = useCallback((from, to) => {
     if (isSpectator) return;
     if (gameState.status !== 'ongoing') return;
@@ -325,7 +305,6 @@ const handleGameEnd = useCallback((data) => {
     const piece = board.getPiece(from);
     if (!piece || piece.color !== playerColor) return;
 
-    // Check for pawn promotion
     if (piece.type === 'pawn') {
       const toCoord = board.squareToCoordinate(to);
       const promotionRank = piece.color === 'white' ? 7 : 0;
@@ -349,7 +328,6 @@ const handleGameEnd = useCallback((data) => {
   }, [pendingMove]);
 
   const executeMove = useCallback((from, to, promotion) => {
-    // OPTIMISTIC UPDATE - Show move immediately for instant feedback
     const tempBoard = board.clone();
     const piece = tempBoard.getPiece(from);
     
@@ -361,16 +339,13 @@ const handleGameEnd = useCallback((data) => {
     
     const capturedPiece = tempBoard.getPiece(to);
     
-    // Make the move on temp board
     tempBoard.board[to] = piece;
     delete tempBoard.board[from];
     tempBoard.turn = tempBoard.turn === 'white' ? 'black' : 'white';
     
-    // Update UI immediately (optimistic)
     setBoard(tempBoard);
     setValidator(new MoveValidator(tempBoard));
     
-    // Add to move history with optimistic flag
     const tempMove = {
       from,
       to,
@@ -378,14 +353,13 @@ const handleGameEnd = useCallback((data) => {
       captured: capturedPiece?.type,
       notation: `${from}-${to}`,
       color: board.turn,
-      optimistic: true,  // Flag for rollback if server rejects
+      optimistic: true,
       timestamp: Date.now(),
     };
     
     setMoves(prev => [...prev, tempMove]);
     setCurrentMoveIndex(prev => prev + 1);
     
-    // Update captured pieces optimistically
     if (capturedPiece) {
       setCapturedPieces(prev => ({
         ...prev,
@@ -393,43 +367,40 @@ const handleGameEnd = useCallback((data) => {
       }));
     }
     
-    // Send to server
-    if (send) {
-      send({
+    if (sendRef.current) {
+      sendRef.current({
         type: 'move',
         payload: { from, to, promotion, timestamp: Date.now() },
       });
     }
-  }, [board, send]);
+  }, [board]);
 
   const handleMoveClick = useCallback((index) => {
-    if (send) {
-      send({
+    if (sendRef.current) {
+      sendRef.current({
         type: 'jump_to_move',
-        payload: {
-          move_index: index,
-        },
+        payload: { move_index: index },
       });
     }
-  }, [send]);
+  }, []);
 
   const handleResign = useCallback(() => {
-    if (send) {
-      send({ type: 'resign' });
+    if (sendRef.current) {
+      sendRef.current({ type: 'resign' });
     }
-  }, [send]);
+  }, []);
 
   const handleOfferDraw = useCallback(() => {
-    if (send) {
-      send({ type: 'offer_draw' });
+    if (sendRef.current) {
+      sendRef.current({ type: 'offer_draw' });
     }
-  }, [send]);
+  }, []);
 
   const handleRequestTakeback = useCallback(() => {
-    if (send) {
-      send({ type: 'request_takeback' });
+    if (sendRef.current) {
+      sendRef.current({ type: 'request_takeback' });
     }
-  }, [send]);
+  }, []);
 
   const getValidMoves = useCallback((square) => {
     return validator.getPieceMoves(square);
@@ -440,10 +411,8 @@ const handleGameEnd = useCallback((data) => {
   }, []);
 
   // RENDER 
-
   return (
     <div className="container mx-auto max-w-7xl h-[calc(100vh-150px)]">
-      {/* Connection Error Display */}
       {connectionError && (
         <div className="fixed top-20 right-6 bg-orange-500/90 text-white px-6 py-3 rounded-lg shadow-lg z-50">
           {connectionError}
@@ -451,7 +420,6 @@ const handleGameEnd = useCallback((data) => {
         </div>
       )}
 
-      {/* Error Display */}
       {error && (
         <div className="fixed top-20 right-6 bg-red-500/90 text-white px-6 py-3 rounded-lg shadow-lg z-50">
           {error}
@@ -539,7 +507,7 @@ const handleGameEnd = useCallback((data) => {
               gameId={gameId}
               isPlayerChat={!isSpectator}
               currentUser={user}
-              websocketSend={send}
+              websocketSend={sendRef.current}
               onMessage={registerChatHandler}
             />
           </div>
