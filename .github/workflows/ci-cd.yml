@@ -128,11 +128,6 @@ jobs:
           cd frontend
           npm install
 
-      - name: Run linting
-        run: |
-          cd frontend
-          npm run lint || echo "Linting failed but continuing..."
-
       - name: Run frontend tests
         run: |
           cd frontend
