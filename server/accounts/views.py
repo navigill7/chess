@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -102,11 +103,23 @@ def login(request):
         'status': True
     })
 
+from django.views.decorators.csrf import csrf_exempt
 
-@api_view(['POST'])
+@api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def google_auth(request):
     """Google OAuth - Users never see this URL directly"""
+    
+    # Handle preflight request
+    if request.method == 'OPTIONS':
+        response = JsonResponse({'status': 'ok'})
+        response['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        return response
+    
     token = request.data.get('token')
     
     if not token:
@@ -116,6 +129,7 @@ def google_auth(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
+        # Verify the token with Google
         id_info = id_token.verify_oauth2_token(
             token,
             google_requests.Request(),
@@ -125,44 +139,57 @@ def google_auth(request):
         email = id_info['email']
         first_name = id_info.get('given_name', '')
         last_name = id_info.get('family_name', '')
-        profile_pic = id_info.get('picture', '')
         
-        user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                'username': email.split('@')[0],
-                'first_name': first_name,
-                'last_name': last_name,
-                'registration_method': 'google',
-                'is_email_verified': True,
-            }
-        )
+        # Try to get existing user
+        user = User.objects.filter(email=email).first()
         
-        if created:
+        if user:
+            # User exists - check registration method
+            if user.registration_method != 'google':
+                # CONFLICT: Email registered with password
+                return Response({
+                    'error': f'This email is already registered with email/password. Please login with your password instead, or use a different Google account.',
+                    'status': False,
+                    'conflict': True
+                }, status=status.HTTP_409_CONFLICT)
+        else:
+            # New user - create with Google
+            user = User.objects.create_user(
+                email=email,
+                username=email.split('@')[0],
+                first_name=first_name,
+                last_name=last_name,
+                registration_method='google',
+                is_email_verified=True,
+            )
             user.set_unusable_password()
             user.save()
-        else:
-            # Existing user trying to login with Google
-            if user.registration_method != 'google':
-                return Response({
-                    'error': 'Please login with email and password',
-                    'status': False
-                }, status=status.HTTP_403_FORBIDDEN)
         
+        # Set user online
         user.is_online = True
         user.save(update_fields=['is_online'])
         
+        # Generate tokens
         tokens = get_tokens_for_user(user)
         
-        return Response({
+        response_data = {
             'user': UserSerializer(user).data,
             'token': tokens['access'],
             'refresh': tokens['refresh'],
-            'is_new_user': created,
+            'is_new_user': not bool(User.objects.filter(email=email, registration_method='google').exists()),
             'status': True
-        }, status=status.HTTP_200_OK)
+        }
         
-    except ValueError:
+        response = Response(response_data, status=status.HTTP_200_OK)
+        
+        # Add CORS headers explicitly
+        response['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        
+        return response
+        
+    except ValueError as e:
+        print(f"❌ Google token verification failed: {e}")
         return Response({
             'error': 'Invalid Google token',
             'status': False

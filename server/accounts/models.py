@@ -83,7 +83,7 @@ class User(AbstractUser, PermissionsMixin):
         db_table = 'users'
         
     def __str__(self):
-        return self.username
+        return self.email
     
     @property
     def win_rate(self):

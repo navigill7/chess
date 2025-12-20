@@ -207,6 +207,12 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'x-google-oauth-client-id',
+]
+
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'x-csrftoken',
 ]
 
 # WebSocket CORS

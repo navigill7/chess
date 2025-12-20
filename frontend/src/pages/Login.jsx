@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
-import authService from '../services/authService';
 
 function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -11,7 +10,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, googleLogin, isAuthenticated } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -31,7 +30,6 @@ function Login() {
       if (!result.success) {
         setError(result.error || 'Login failed. Please check your credentials.');
       }
-      // Navigation is handled in AuthContext after successful login
     } catch (err) {
       console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.');
@@ -45,14 +43,13 @@ function Login() {
     setError('');
     
     try {
-      const result = await authService.googleLogin(credentialResponse.credential);
+      // Use AuthContext's googleLogin which handles navigation
+      const result = await googleLogin(credentialResponse.credential);
       
-      if (result.success) {
-        // AuthContext will handle navigation
-        return;
-      } else {
+      if (!result.success) {
         setError(result.error || 'Google login failed');
       }
+      // If success, AuthContext navigates automatically
     } catch (err) {
       console.error('Google login error:', err);
       setError('An unexpected error occurred with Google login');
@@ -62,10 +59,9 @@ function Login() {
   };
 
   const handleGoogleError = () => {
-    console.error('Google Login Failed');
+    console.error('❌ Google Login Failed - User cancelled or error occurred');
     setError('Google login failed. Please try again.');
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
@@ -168,7 +164,11 @@ function Login() {
             <div className="flex-1 border-t border-white/20"></div>
           </div>
 
+          {/* Google Login with Debug Info */}
           <div className="mt-4">
+            <div className="mb-2 text-xs text-white/40 text-center">
+              Backend URL: {import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}
+            </div>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
@@ -178,12 +178,11 @@ function Login() {
               text="signin_with"
               shape="rectangular"
               logo_alignment="left"
-              width="100%"
             />
           </div>
 
           {/* Sign Up Link */}
-          <p className="text-center text-white/60 text-sm">
+          <p className="text-center text-white/60 text-sm mt-6">
             Don't have an account?{' '}
             <Link to="/register" className="text-purple-400 hover:text-purple-300 font-semibold">
               Sign up
@@ -201,9 +200,8 @@ function Login() {
           </button>
         </div>
       </div>
-
     </div>
   );
 }
 
-export default Login;  
+export default Login;

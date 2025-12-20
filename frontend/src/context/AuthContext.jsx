@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -101,6 +102,35 @@ export function AuthProvider({ children }) {
     }
   };
 
+ const googleLogin = async (googleToken) => {
+    try {
+      const result = await authService.googleLogin(googleToken);
+      
+      if (result.success) {
+        // authService already stored token/user in localStorage
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+        
+        if (storedToken && storedUser) {
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+          
+          // Navigate to home
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 100);
+          
+          return { success: true };
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -121,6 +151,7 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
+    googleLogin,
     logout,
     updateUser,
     isAuthenticated: !!user,
