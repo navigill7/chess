@@ -291,11 +291,11 @@ class ChessEngine:
                     if not target or target['color'] != color:
                         moves.append(target_sq)
         
-        # Castling
+        # Castling - with recursion protection
         if not self.is_square_attacked(square, color):
             start_rank = 0 if color == 'white' else 7
             
-            # Kingside
+            # Kingside castling
             if (color == 'white' and self.castling['K']) or (color == 'black' and self.castling['k']):
                 f1 = self.coord_to_square(5, start_rank)
                 g1 = self.coord_to_square(6, start_rank)
@@ -305,7 +305,7 @@ class ChessEngine:
                     not self.is_square_attacked(g1, color)):
                     moves.append(g1)
             
-            # Queenside
+            # Queenside castling
             if (color == 'white' and self.castling['Q']) or (color == 'black' and self.castling['q']):
                 d1 = self.coord_to_square(3, start_rank)
                 c1 = self.coord_to_square(2, start_rank)
@@ -318,12 +318,39 @@ class ChessEngine:
         
         return moves
     
+    def get_king_moves_simple(self, square, color):
+        """King moves WITHOUT castling check (prevents recursion in is_square_attacked)"""
+        moves = []
+        file, rank = self.square_to_coord(square)
+        
+        for df in [-1, 0, 1]:
+            for dr in [-1, 0, 1]:
+                if df == 0 and dr == 0:
+                    continue
+                
+                new_file, new_rank = file + df, rank + dr
+                if 0 <= new_file < 8 and 0 <= new_rank < 8:
+                    target_sq = self.coord_to_square(new_file, new_rank)
+                    target = self.board.get(target_sq)
+                    if not target or target['color'] != color:
+                        moves.append(target_sq)
+        
+        # NO CASTLING CHECK - this is for attack detection only
+        return moves
+
     def is_square_attacked(self, square, defender_color):
         attacker_color = 'black' if defender_color == 'white' else 'white'
         
         for sq, piece in self.board.items():
             if piece['color'] == attacker_color:
-                moves = self.get_piece_moves(sq)
+                # CRITICAL FIX: Use simple king moves to prevent recursion
+                if piece['type'] == 'king':
+                    # For kings, use simple moves (no castling check)
+                    moves = self.get_king_moves_simple(sq, piece['color'])
+                else:
+                    # For all other pieces, use normal move generation
+                    moves = self.get_piece_moves(sq)
+                
                 if square in moves:
                     return True
         

@@ -178,29 +178,36 @@ class MoveValidator {
       }
     }
 
-    // Castling (simplified - doesn't check if squares are attacked)
-    if (!this.isSquareAttacked(this.board, square, color)) {
+    // Castling - with recursion protection
+    const kingSquare = square;
+    const isKingAttacked = this.isSquareAttacked(this.board, kingSquare, color);
+    
+    if (!isKingAttacked) {
       const startRank = color === 'white' ? 0 : 7;
 
-      // Kingside
+      // Kingside castling
       if ((color === 'white' && this.board.castling.K) || 
           (color === 'black' && this.board.castling.k)) {
         const f = this.board.coordToSquare(5, startRank);
         const g = this.board.coordToSquare(6, startRank);
         
-        if (!this.board.getPiece(f) && !this.board.getPiece(g)) {
+        if (!this.board.getPiece(f) && !this.board.getPiece(g) &&
+            !this.isSquareAttacked(this.board, f, color) &&
+            !this.isSquareAttacked(this.board, g, color)) {
           moves.push(g);
         }
       }
 
-      // Queenside
+      // Queenside castling
       if ((color === 'white' && this.board.castling.Q) || 
           (color === 'black' && this.board.castling.q)) {
         const d = this.board.coordToSquare(3, startRank);
         const c = this.board.coordToSquare(2, startRank);
         const b = this.board.coordToSquare(1, startRank);
         
-        if (!this.board.getPiece(d) && !this.board.getPiece(c) && !this.board.getPiece(b)) {
+        if (!this.board.getPiece(d) && !this.board.getPiece(c) && !this.board.getPiece(b) &&
+            !this.isSquareAttacked(this.board, d, color) &&
+            !this.isSquareAttacked(this.board, c, color)) {
           moves.push(c);
         }
       }
@@ -209,12 +216,49 @@ class MoveValidator {
     return moves;
   }
 
+  getKingMovesSimple(square, color) {
+    // King moves WITHOUT castling check (prevents recursion in isSquareAttacked)
+    const moves = [];
+    const coord = this.board.squareToCoordinate(square);
+
+    for (let df = -1; df <= 1; df++) {
+      for (let dr = -1; dr <= 1; dr++) {
+        if (df === 0 && dr === 0) continue;
+
+        const newFile = coord.file + df;
+        const newRank = coord.rank + dr;
+
+        if (newFile >= 0 && newFile <= 7 && newRank >= 0 && newRank <= 7) {
+          const targetSquare = this.board.coordToSquare(newFile, newRank);
+          const targetPiece = this.board.getPiece(targetSquare);
+
+          if (!targetPiece || targetPiece.color !== color) {
+            moves.push(targetSquare);
+          }
+        }
+      }
+    }
+
+    // NO CASTLING CHECK - this is for attack detection only
+    return moves;
+  }
+
   isSquareAttacked(board, square, defenderColor) {
     const attackerColor = defenderColor === 'white' ? 'black' : 'white';
 
     for (const [sq, piece] of Object.entries(board.board)) {
       if (piece.color === attackerColor) {
-        const moves = this.getPieceMoves(sq);
+        // CRITICAL FIX: Use simple king moves to prevent recursion
+        let moves;
+        if (piece.type === 'king') {
+          // For kings, use simple moves (no castling check)
+          const coord = board.squareToCoordinate(sq);
+          moves = this.getKingMovesSimple(sq, piece.color);
+        } else {
+          // For all other pieces, use normal move generation
+          moves = this.getPieceMoves(sq);
+        }
+        
         if (moves.includes(square)) {
           return true;
         }

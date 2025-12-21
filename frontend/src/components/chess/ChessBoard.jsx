@@ -136,9 +136,13 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
   };
 
   const getPieceImage = (piece) => {
-    const colorCode = piece.color === 'white' ? 'w' : 'b';
-    const typeCode = piece.type[0];
-    return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${colorCode}${typeCode}.png`;
+      const colorCode = piece.color === 'white' ? 'w' : 'b';
+      const typeMap = {
+        'pawn': 'p', 'knight': 'n', 'bishop': 'b',
+        'rook': 'r', 'queen': 'q', 'king': 'k'
+      };
+      const typeCode = typeMap[piece.type];
+      return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${colorCode}${typeCode}.png`;
   };
 
   return (
