@@ -10,21 +10,46 @@ RUN apk add --no-cache python3 make g++
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Clean install
+# Clean install with better error handling
 RUN npm cache clean --force && \
-    npm ci --legacy-peer-deps --prefer-offline --no-audit
+    npm ci --legacy-peer-deps --prefer-offline --no-audit || \
+    (echo "npm ci failed, trying npm install" && npm install --legacy-peer-deps)
 
 # Copy all source files
 COPY . .
 
-# Build with error handling - MODIFIED
-RUN npm run build 2>&1 || (echo "=== BUILD FAILED ===" && \
-    echo "Checking for common issues:" && \
-    cat package.json | grep "\"build\"" && \
-    ls -la && exit 1)
+# Set build-time environment variables
+ARG VITE_API_URL
+ARG VITE_WS_URL
+ARG VITE_GOOGLE_OAUTH_CLIENT_ID
 
-# Verify build output
-RUN ls -la /app/dist || ls -la /app/build || (echo "Build output not found!" && exit 1)
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_WS_URL=${VITE_WS_URL}
+ENV VITE_GOOGLE_OAUTH_CLIENT_ID=${VITE_GOOGLE_OAUTH_CLIENT_ID}
+
+# Build with better error handling
+RUN npm run build || \
+    (echo "=== BUILD FAILED ===" && \
+     echo "Environment variables:" && \
+     env | grep VITE_ && \
+     echo "Package.json build script:" && \
+     cat package.json | grep -A 2 '"scripts"' && \
+     echo "Directory contents:" && \
+     ls -la && \
+     echo "Checking for syntax errors:" && \
+     npm run build 2>&1 | head -50 && \
+     exit 1)
+
+# Verify build output exists
+RUN if [ -d "/app/dist" ]; then \
+      echo "✓ Build successful - dist directory found"; \
+      ls -la /app/dist; \
+    else \
+      echo "✗ Build failed - dist directory not found"; \
+      echo "Available directories:"; \
+      ls -la /app; \
+      exit 1; \
+    fi
 
 # Production stage
 FROM nginx:1.25-alpine
@@ -32,14 +57,17 @@ FROM nginx:1.25-alpine
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built files - handle both dist and build directories
-COPY --from=build /app/dist /usr/share/nginx/html 2>/dev/null || \
-     COPY --from=build /app/build /usr/share/nginx/html
+# Copy built files from dist directory
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Verify copied files
-RUN ls -la /usr/share/nginx/html
+RUN ls -la /usr/share/nginx/html && \
+    if [ ! -f "/usr/share/nginx/html/index.html" ]; then \
+      echo "ERROR: index.html not found!"; \
+      exit 1; \
+    fi
 
-# Create nginx user if not exists (skip if exists)
+# Create nginx user if not exists
 RUN addgroup -g 101 -S nginx 2>/dev/null || true && \
     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx 2>/dev/null || true
 
