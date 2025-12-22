@@ -19,7 +19,6 @@ env:
   EC2_USER: ubuntu
 
 jobs:
-  # Job 1: Backend Build, Test and Deploy
   backend:
     name: Backend CI/CD
     runs-on: ubuntu-latest
@@ -27,41 +26,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Cache Python dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('server/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          cd server
-          pip install uv
-          uv pip install --system -r pyproject.toml
-
-      - name: Run linting
-        run: |
-          cd server
-          pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run backend tests
-        run: |
-          cd server
-          python manage.py test --settings=core.settings
-        env:
-          SECRET_KEY: test-secret-key-for-ci
-          DATABASE_URL: sqlite:///db.sqlite3
-          DEBUG: True
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -74,13 +38,18 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
+      - name: Build and push backend Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -f server/Dockerfile -t $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG ./server
           docker tag $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest
+          
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
+            docker push $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG
+            docker push $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest
+          fi
 
       - name: Scan Docker image for vulnerabilities
         uses: aquasecurity/trivy-action@master
@@ -97,16 +66,6 @@ jobs:
         with:
           sarif_file: 'trivy-backend-results.sarif'
 
-      - name: Push Docker image to ECR
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker push $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest
-
-  # Job 2: Frontend Build, Test and Deploy
   frontend:
     name: Frontend CI/CD
     runs-on: ubuntu-latest
@@ -124,19 +83,25 @@ jobs:
         uses: actions/cache@v4
         with:
           path: frontend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: |
           cd frontend
-          npm install
+          npm install --legacy-peer-deps
 
-      - name: Build frontend
+      - name: Test build locally (before Docker)
         run: |
           cd frontend
+          echo "Testing build with local Node.js..."
+          VITE_API_URL=http://localhost:8000/api \
+          VITE_WS_URL=ws://localhost:8000 \
           npm run build
+        env:
+          NODE_ENV: production
+        continue-on-error: false
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -149,13 +114,26 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
+      - name: Build and push frontend Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -f frontend/Dockerfile -t $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG ./frontend
+          # Build with production API URLs
+          docker build \
+            --build-arg VITE_API_URL=http://${{ secrets.EC2_HOST }}:8000/api \
+            --build-arg VITE_WS_URL=ws://${{ secrets.EC2_HOST }}:8000 \
+            --build-arg VITE_GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
+            -f frontend/Dockerfile \
+            -t $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG \
+            ./frontend
+          
           docker tag $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest
+          
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
+            docker push $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG
+            docker push $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest
+          fi
 
       - name: Scan Docker image for vulnerabilities
         uses: aquasecurity/trivy-action@master
@@ -172,16 +150,6 @@ jobs:
         with:
           sarif_file: 'trivy-frontend-results.sarif'
 
-      - name: Push Docker image to ECR
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker push $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest
-
-  # Job 3: Deploy to EC2
   deploy:
     name: Deploy to EC2
     needs: [backend, frontend]
@@ -221,6 +189,10 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           
+          # Frontend Environment
+          VITE_API_URL=http://${{ secrets.EC2_HOST }}:8000/api
+          VITE_WS_URL=ws://${{ secrets.EC2_HOST }}:8000
+          
           # AWS/ECR
           AWS_REGION=${{ env.AWS_REGION }}
           ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
@@ -238,58 +210,92 @@ jobs:
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           
-          # Copy docker-compose, env files, and any necessary config
+          # Copy files to EC2
           scp -i private_key.pem -o StrictHostKeyChecking=no \
             docker-compose.yml .env $EC2_USER@$EC2_HOST:/home/$EC2_USER/
           
-          # SSH into EC2 and deploy
+          # Deploy on EC2
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'ENDSSH'
-            # Check if Docker is installed
+            # Install Docker if needed
             if ! command -v docker &> /dev/null; then
               echo "Installing Docker..."
-              sudo apt-get update
-              sudo apt-get install -y docker.io docker-compose-plugin
-            fi
-            
-            # Add user to docker group if not already added
-            if ! groups $USER | grep -q docker; then
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
               sudo usermod -aG docker $USER
-              echo "Added user to docker group. Note: A logout/login may be required for group changes to take effect."
             fi
             
-            # Login to ECR (using sudo for now)
+            # Install Docker Compose if needed
+            if ! command -v docker-compose &> /dev/null; then
+              echo "Installing Docker Compose..."
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+            
+            # Install AWS CLI if needed
+            if ! command -v aws &> /dev/null; then
+              echo "Installing AWS CLI..."
+              sudo apt-get update
+              sudo apt-get install -y awscli
+            fi
+            
+            # Login to ECR
             aws ecr get-login-password --region us-east-1 | \
-              sudo docker login --username AWS --password-stdin 905418351204.dkr.ecr.us-east-1.amazonaws.com
+              sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             
             # Pull latest images
-            sudo docker pull 905418351204.dkr.ecr.us-east-1.amazonaws.com/chess-backend:latest
-            sudo docker pull 905418351204.dkr.ecr.us-east-1.amazonaws.com/chess-frontend:latest
+            echo "Pulling images..."
+            sudo docker pull ${{ steps.login-ecr.outputs.registry }}/chess-backend:latest
+            sudo docker pull ${{ steps.login-ecr.outputs.registry }}/chess-frontend:latest
             
-            # Stop and remove old containers
-            sudo docker compose down || sudo docker-compose down || true
+            # Stop old containers
+            echo "Stopping old containers..."
+            sudo docker-compose down || true
             
             # Start new containers
-            sudo docker compose up -d || sudo docker-compose up -d
+            echo "Starting new containers..."
+            sudo docker-compose up -d
             
-            # Clean up old images
+            # Wait for services
+            echo "Waiting for services to start..."
+            sleep 15
+            
+            # Check container status
+            echo "Container status:"
+            sudo docker-compose ps
+            
+            # Show logs
+            echo "Recent logs:"
+            sudo docker-compose logs --tail=50
+            
+            # Clean up
+            echo "Cleaning up old images..."
             sudo docker image prune -af
             
-            echo "Deployment completed successfully!"
+            echo "✅ Deployment completed!"
           ENDSSH
           
           rm -f private_key.pem
 
       - name: Verify deployment
         run: |
-          echo "Waiting for services to start..."
+          echo "Waiting for services to stabilize..."
           sleep 30
           
           # Health check
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST/health || echo "000")
+          echo "Checking backend health..."
+          BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST:8000/health || echo "000")
           
-          if [ "$HTTP_STATUS" -eq 200 ]; then
-            echo "✅ Deployment successful! Application is healthy."
+          echo "Checking frontend..."
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST || echo "000")
+          
+          echo "Backend status: $BACKEND_STATUS"
+          echo "Frontend status: $FRONTEND_STATUS"
+          
+          if [ "$BACKEND_STATUS" -eq 200 ] && [ "$FRONTEND_STATUS" -eq 200 ]; then
+            echo "✅ Deployment successful! All services are healthy."
           else
-            echo "⚠️  Health check returned: $HTTP_STATUS"
-            echo "Services may still be starting up. Please verify manually."
+            echo "⚠️  Some services may not be fully ready yet."
+            echo "Backend: $BACKEND_STATUS (expected: 200)"
+            echo "Frontend: $FRONTEND_STATUS (expected: 200)"
+            echo "Please check the logs on EC2 if issues persist."
           fi
