@@ -3,24 +3,34 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 
+from .engine.bot import Bot
 from .engine.board import Board
-from .engine.move import Move
-from .engine.search import SearchEngine
 
-# Initialize search engine
-search_engine = SearchEngine(max_depth=4)
+# Initialize bot (singleton per worker)
+bot = Bot()
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def get_bot_move(request):
-    """Get the best move from the bot"""
+    """
+    Get best move from bot using time-based search
+    Request body: {
+        "fen": "...",
+        "time_ms": 3000  // Thinking time in milliseconds
+    }
+    """
     try:
         data = json.loads(request.body)
         fen = data.get('fen', Board.START_FEN)
+        time_ms = data.get('time_ms', 2000)  # Default 2 seconds
         
-        best_move, evaluation, nodes = search_engine.get_best_move(fen)
+        # Set position
+        bot.set_position(fen)
         
-        if best_move is None:
+        # Think
+        move_uci, evaluation, nodes = bot.think_timed(time_ms)
+        
+        if move_uci is None:
             return JsonResponse({
                 'success': False,
                 'error': 'No legal moves available'
@@ -28,9 +38,10 @@ def get_bot_move(request):
         
         return JsonResponse({
             'success': True,
-            'move': best_move.to_uci(),
+            'move': move_uci,
             'evaluation': evaluation,
-            'nodes_searched': nodes
+            'nodes_searched': nodes,
+            'time_ms': time_ms
         })
     
     except Exception as e:
@@ -54,10 +65,13 @@ def validate_move(request):
                 'error': 'Missing fen or move'
             }, status=400)
         
+        from .engine.board import Board
+        from .engine.move import Move
+        from .engine.move_generator import MoveGenerator
+        
         board = Board(fen)
         move = Move.from_uci(move_uci)
         
-        from .engine.move_generator import MoveGenerator
         gen = MoveGenerator()
         legal_moves = gen.generate_moves(board)
         legal_moves_uci = [m.to_uci() for m in legal_moves]
