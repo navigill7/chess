@@ -45,14 +45,14 @@ function Navbar() {
       ]);
 
       const allNotifications = [
-        ...friendRequests.map(req => ({
+        ...(friendRequests.received || []).map(req => ({
           id: `friend_${req.id}`,
           type: 'friend_request',
           data: req,
-          message: `${req.from_user.username} sent you a friend request`,
+          message: `${req.user.username} sent you a friend request`,
           timestamp: new Date(req.created_at)
         })),
-        ...challenges.received.map(ch => ({
+        ...(challenges.received || []).map(ch => ({
           id: `challenge_${ch.id}`,
           type: 'game_challenge',
           data: ch,

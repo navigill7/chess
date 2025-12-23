@@ -30,13 +30,13 @@ function Friends() {
   const fetchFriends = async () => {
     try {
       const response = await api.get('/auth/friends/');
-      setFriends(response.map(f => ({
-        id: f.friend.id,
-        username: f.friend.username,
-        rating: f.friend.rating,
-        isOnline: f.friend.is_online,
-        lastSeen: new Date(f.friend.last_seen),
-        avatar: f.friend.avatar,
+      setFriends((response.friends || []).map(f => ({
+        id: f.id,
+        username: f.username,
+        rating: f.rating,
+        isOnline: f.is_online,
+        lastSeen: new Date(f.last_seen),
+        avatar: f.avatar,
       })));
     } catch (error) {
       console.error('Failed to fetch friends:', error);

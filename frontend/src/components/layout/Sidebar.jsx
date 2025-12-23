@@ -24,16 +24,16 @@ function Sidebar() {
       const response = await api.get('/auth/friends/');
       
       // Extract online friends from response
-      const onlineFriends = response
+      const onlineFriends = (response.friends || [])
+        .filter(f => f.is_online)
+        .slice(0, 3)
         .map(f => ({
-          id: f.friend.id,
-          username: f.friend.username,
-          rating: f.friend.rating,
-          isOnline: f.friend.is_online,
-          avatar: f.friend.avatar,
-        }))
-        .filter(f => f.isOnline)
-        .slice(0, 3); // Show only top 3 online friends
+          id: f.id,
+          username: f.username,
+          rating: f.rating,
+          isOnline: f.is_online,
+          avatar: f.avatar,
+        }));
       
       setFriends(onlineFriends);
     } catch (error) {
