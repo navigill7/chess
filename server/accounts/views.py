@@ -14,7 +14,8 @@ from .serializers import (
 )
 from django.db.models import Q, Count, Prefetch
 from django.contrib.postgres.search import TrigramSimilarity
-from .models import User, Friend, FriendRequest
+from .models import User
+from django.http import JsonResponse
 
 
 User = get_user_model()

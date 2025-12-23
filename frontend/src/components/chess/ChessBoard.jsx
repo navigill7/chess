@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../styles/Board.css";
+import RatingChangeDisplay from "./RatingChangeDisplay";
 
 function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves }) {
   const [selectedSquare, setSelectedSquare] = useState(null);
@@ -270,42 +271,7 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
               </p>
               
               {/* Rating Changes */}
-              {gameState.ratingChanges && (
-                <div style={{
-                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  marginTop: '1rem'
-                }}>
-                  <p style={{
-                    color: '#6366f1',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    marginBottom: '0.75rem'
-                  }}>
-                    Rating Changes
-                  </p>
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.5rem',
-                    color: '#111827'
-                  }}>
-                    <RatingChangeDisplay
-                      playerColor="white"
-                      oldRating={gameState.ratingChanges.white.before}
-                      newRating={gameState.ratingChanges.white.after}
-                      playerName={gameState.ratingChanges.white.name}
-                    />
-                    <RatingChangeDisplay
-                      playerColor="black"
-                      oldRating={gameState.ratingChanges.black.before}
-                      newRating={gameState.ratingChanges.black.after}
-                      playerName={gameState.ratingChanges.black.name}
-                    />
-                  </div>
-                </div>
-              )}
+              {gameState.ratingChanges && <RatingChangeDisplay/>}
             </div>
           </div>
         )}

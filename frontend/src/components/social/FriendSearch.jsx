@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, UserPlus, UserCheck, Clock, X, Swords, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import api from '../../services/api';
 
 function FriendSearch() {
   const [searchQuery, setSearchQuery] = useState('');

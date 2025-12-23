@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import ChallengeModal from '../components/social/ChallengeModal';
 import ChallengeNotification from '../components/social/ChallengeNotification';
+import FriendSearch from '../components/social/FriendSearch';
 
 function Friends() {
   const navigate = useNavigate();
@@ -11,9 +12,6 @@ function Friends() {
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const [challenges, setChallenges] = useState({ received: [], sent: [] });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [loading, setLoading] = useState(false);
   
   // Challenge modal state
   const [showChallengeModal, setShowChallengeModal] = useState(false);
@@ -68,32 +66,7 @@ function Friends() {
     }
   };
 
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const response = await api.get('/auth/users/search/', { params: { q: query } });
-      setSearchResults(response);
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddFriend = async (username) => {
-    try {
-      await api.post('/auth/friends/request/', { username });
-      handleSearch(searchQuery);
-    } catch (error) {
-      console.error('Failed to send friend request:', error);
-    }
-  };
 
   const handleAcceptRequest = async (requestId) => {
     try {
@@ -343,60 +316,7 @@ function Friends() {
           </div>
         )}
 
-        {activeTab === 'search' && (
-          <div>
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by username..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-
-            {loading ? (
-              <div className="text-center py-8 text-white/60">Searching...</div>
-            ) : searchQuery.length < 2 ? (
-              <div className="text-center py-12">
-                <Search className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <p className="text-white/60">Enter a username to search</p>
-              </div>
-            ) : searchResults.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-white/60">No users found</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {searchResults.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between bg-white/5 rounded-lg p-4"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-lg font-bold">
-                        {user.username[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <h3 className="text-white font-semibold">{user.username}</h3>
-                        <p className="text-sm text-white/60">{user.rating} rating</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleAddFriend(user.id)}
-                      disabled={user.is_friend}
-                      className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-white/10 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      <span>{user.is_friend ? 'Already Friends' : 'Add Friend'}</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {activeTab === 'search' && <FriendSearch />}
       </div>
 
       {/* Challenge Modal */}
