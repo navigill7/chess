@@ -45,7 +45,7 @@ function QuickPairingGrid() {
     };
 
     const handlePlayComputer = () => {
-        navigate('/game/computer');
+        navigate('/bot');
     };
 
     return (
