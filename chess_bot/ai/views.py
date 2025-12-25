@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 
+from .engine.move import Move
 from .engine.bot import Bot
 from .engine.board import Board
 from .game_session import game_manager
@@ -71,7 +72,7 @@ def create_game(request):
         "game_id": "uuid-here",
         "player_color": "white",
         "starting_fen": "...",
-        "game_url": "/api/bot/game/{game_id}"
+        "game_url": "/api/bot/games/{game_id}"
     }
     """
     try:
@@ -102,7 +103,8 @@ def create_game(request):
             move_uci, evaluation, nodes = bot.think_timed(time_ms)
             
             if move_uci:
-                board.make_move(Move.from_uci(move_uci))
+                move_obj = Move.from_uci(move_uci)
+                board.make_move(move_obj)
                 game_manager.update_game(game_id, board.to_fen(), move_uci)
                 first_move = move_uci
         
@@ -113,10 +115,12 @@ def create_game(request):
             'difficulty': difficulty,
             'starting_fen': board.to_fen(),
             'bot_first_move': first_move,
-            'game_url': f'/api/bot/game/{game_id}'
+            'game_url': f'/api/bot/games/{game_id}'
         })
     
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'success': False,
             'error': str(e)
