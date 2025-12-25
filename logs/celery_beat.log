@@ -1,0 +1,5 @@
+[2025-12-25 16:36:43,398: INFO/MainProcess] beat: Starting...
+[2025-12-25 16:36:45,807: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
+[2025-12-25 16:40:00,219: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
+[2025-12-25 16:45:00,056: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
+[2025-12-25 16:50:00,036: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)

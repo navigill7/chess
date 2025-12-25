@@ -1,0 +1,214 @@
+Starting server at tcp:port=8000:interface=127.0.0.1
+HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+Configuring endpoint tcp:port=8000:interface=127.0.0.1
+Listening on TCP address 127.0.0.1:8000
+Unauthorized: /api/game/challenges/pending/
+Unauthorized: /api/auth/friends/
+Unauthorized: /api/auth/friends/requests/
+Unauthorized: /api/auth/friends/
+Unauthorized: /api/game/challenges/pending/
+Unauthorized: /api/auth/friends/requests/
+Exception inside application: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\backends.py", line 139, in decode
+    return jwt.decode(
+           ^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 222, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 167, in decode_complete
+    self._validate_claims(
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 262, in _validate_claims
+    self._validate_exp(payload, now, leeway)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 363, in _validate_exp
+    raise ExpiredSignatureError("Signature has expired")
+jwt.exceptions.ExpiredSignatureError: Signature has expired
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\tokens.py", line 56, in __init__
+    self.payload = token_backend.decode(token, verify=verify)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\backends.py", line 154, in decode
+    raise TokenBackendError(_("Token is invalid or expired")) from ex
+rest_framework_simplejwt.exceptions.TokenBackendError: Token is invalid or expired
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 14, in get_user_from_token
+    access_token = AccessToken(token_key)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\tokens.py", line 58, in __init__
+    raise TokenError(_("Token is invalid or expired"))
+rest_framework_simplejwt.exceptions.TokenError: Token is invalid or expired
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\security\websocket.py", line 37, in __call__
+    return await self.application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 30, in __call__
+    user = await get_user_from_token(token)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\asgiref\sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\db.py", line 13, in thread_handler
+    return super().thread_handler(loop, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\asgiref\sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 19, in get_user_from_token
+    print(f"\u274c Token validation failed: {e}")
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+Exception inside application: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\backends.py", line 139, in decode
+    return jwt.decode(
+           ^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 222, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 167, in decode_complete
+    self._validate_claims(
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 262, in _validate_claims
+    self._validate_exp(payload, now, leeway)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 363, in _validate_exp
+    raise ExpiredSignatureError("Signature has expired")
+jwt.exceptions.ExpiredSignatureError: Signature has expired
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\tokens.py", line 56, in __init__
+    self.payload = token_backend.decode(token, verify=verify)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\backends.py", line 154, in decode
+    raise TokenBackendError(_("Token is invalid or expired")) from ex
+rest_framework_simplejwt.exceptions.TokenBackendError: Token is invalid or expired
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 14, in get_user_from_token
+    access_token = AccessToken(token_key)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\tokens.py", line 58, in __init__
+    raise TokenError(_("Token is invalid or expired"))
+rest_framework_simplejwt.exceptions.TokenError: Token is invalid or expired
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\security\websocket.py", line 37, in __call__
+    return await self.application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 30, in __call__
+    user = await get_user_from_token(token)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\asgiref\sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\db.py", line 13, in thread_handler
+    return super().thread_handler(loop, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\asgiref\sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 19, in get_user_from_token
+    print(f"\u274c Token validation failed: {e}")
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+Unauthorized: /api/game/challenges/pending/
+Unauthorized: /api/auth/friends/
+Unauthorized: /api/auth/friends/requests/
+Unauthorized: /api/game/challenges/pending/
+Unauthorized: /api/auth/friends/
+Unauthorized: /api/auth/friends/requests/
+Exception inside application: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\backends.py", line 139, in decode
+    return jwt.decode(
+           ^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 222, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 167, in decode_complete
+    self._validate_claims(
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 262, in _validate_claims
+    self._validate_exp(payload, now, leeway)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\jwt\api_jwt.py", line 363, in _validate_exp
+    raise ExpiredSignatureError("Signature has expired")
+jwt.exceptions.ExpiredSignatureError: Signature has expired
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\tokens.py", line 56, in __init__
+    self.payload = token_backend.decode(token, verify=verify)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\backends.py", line 154, in decode
+    raise TokenBackendError(_("Token is invalid or expired")) from ex
+rest_framework_simplejwt.exceptions.TokenBackendError: Token is invalid or expired
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 14, in get_user_from_token
+    access_token = AccessToken(token_key)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\rest_framework_simplejwt\tokens.py", line 58, in __init__
+    raise TokenError(_("Token is invalid or expired"))
+rest_framework_simplejwt.exceptions.TokenError: Token is invalid or expired
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\routing.py", line 62, in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\security\websocket.py", line 37, in __call__
+    return await self.application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 30, in __call__
+    user = await get_user_from_token(token)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\asgiref\sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\channels\db.py", line 13, in thread_handler
+    return super().thread_handler(loop, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\asgiref\sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\core\jwt_auth_middleware.py", line 19, in get_user_from_token
+    print(f"\u274c Token validation failed: {e}")
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>

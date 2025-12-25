@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Clock, Users, Cpu, Trophy, Play, Target, TrendingUp } from "lucide-react";
+import { Clock, Users, Cpu, Trophy, Play, Target, TrendingUp, Loader2 } from "lucide-react";
+import botService from '../services/botService';
 
 function Home() {
     const navigate = useNavigate();
@@ -20,6 +21,8 @@ function Home() {
 
 function QuickPairingGrid() {
     const navigate = useNavigate();
+    const [isCreatingGame, setIsCreatingGame] = useState(false);
+    
     const timeControls = [
         { time: '1+0', type: 'Bullet' },
         { time: '2+1', type: 'Bullet' },
@@ -44,8 +47,27 @@ function QuickPairingGrid() {
         navigate('/friends?action=challenge');
     };
 
-    const handlePlayComputer = () => {
-        navigate('/bot');
+    const handlePlayComputer = async () => {
+        if (isCreatingGame) return;
+        
+        setIsCreatingGame(true);
+        try {
+            // Create a unique game session
+            const result = await botService.createGame('white', 'medium');
+            
+            if (result.success && result.game_id) {
+                // Navigate to the unique game path
+                navigate(`/bot/${result.game_id}`);
+            } else {
+                console.error('Failed to create bot game:', result.error);
+                alert('Failed to create game. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error creating bot game:', error);
+            alert('Failed to create game. Please try again.');
+        } finally {
+            setIsCreatingGame(false);
+        }
     };
 
     return (
@@ -86,17 +108,28 @@ function QuickPairingGrid() {
                 
                 <button 
                     onClick={handlePlayComputer}
-                    className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded-xl p-4 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                    disabled={isCreatingGame}
+                    className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded-xl p-4 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <Cpu className="w-5 h-5" />
-                    <span className="font-semibold">Play Computer</span>
+                    {isCreatingGame ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="font-semibold">Creating...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Cpu className="w-5 h-5" />
+                            <span className="font-semibold">Play Computer</span>
+                        </>
+                    )}
                 </button>
             </div>
         </div>
     );
 }
 
-// Tournaments List Component
+// ... (rest of the component remains the same)
+
 function TournamentsList() {
   const navigate = useNavigate();
   const tournaments = [
