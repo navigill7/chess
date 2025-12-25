@@ -124,16 +124,14 @@ class OpeningBook:
     
     def _simplify_fen(self, fen):
         """
-        Remove move counters from FEN for book lookup.
-        This allows positions to match regardless of move number.
+        Simplify FEN to match book.txt format.
+        book.txt uses: position side castling ep (with '-' for ep if none)
         """
         parts = fen.split()
-        # Keep only: position, side, castling, ep
-        # Remove: fifty-move counter, move number
         if len(parts) >= 4:
+            # Return: position side castling ep
             return ' '.join(parts[:4])
         return fen
-
 
 # Example usage with polyglot book format (for .bin files)
 class PolyglotBook:
