@@ -27,7 +27,6 @@ function AppRouter() {
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-
                     <Route path="/*" 
                         element={
                         <ProtectedRoute>
@@ -59,6 +58,7 @@ function MainLayout() {
             <Route path="/spectate" element={<Spectate />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/404" element={<NotFound />} />
+            <Route path="/bot" element={<BotGame />} />
             <Route path="/bot/:gameId" element={<BotGame />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>

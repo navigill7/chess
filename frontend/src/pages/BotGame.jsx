@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Cpu, RotateCcw, Home, Loader2 } from "lucide-react";
+import { Cpu, RotateCcw, Home, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 import ChessBoard from "../components/chess/ChessBoard";
 import MoveHistory from "../components/chess/MoveHistory";
 import CapturedPieces from "../components/chess/CapturedPieces";
 import PromotionModal from "../components/chess/PromotionModal";
-import CoordinateConverter from "../chess/CoordinateConverter";
 import Board from "../chess/Board";
 import MoveValidator from "../chess/MoveValidator";
 import botService from "../services/botService";
@@ -43,6 +42,7 @@ function BotGame() {
   // UI state
   const [moves, setMoves] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
+  const [viewIndex, setViewIndex] = useState(-1); // -1 = current game, else = viewing history
   const [capturedPieces, setCapturedPieces] = useState({
     white: [],
     black: [],
@@ -407,6 +407,71 @@ function BotGame() {
     [validator]
   );
 
+  // Takeback move - removes last move and reverts board
+  const handleTakeback = useCallback(() => {
+    if (moves.length === 0 || botThinking) return;
+    
+    const newMoves = moves.slice(0, -1);
+    setMoves(newMoves);
+    setCurrentMoveIndex(newMoves.length - 1);
+    setViewIndex(-1);
+
+    // Rebuild board from moves
+    const newBoard = new Board();
+    const validator = new MoveValidator(newBoard);
+    
+    for (const move of newMoves) {
+      validator.makeMove(newBoard, move.from, move.to, move.promotion);
+    }
+
+    setBoard(newBoard);
+    setValidator(new MoveValidator(newBoard));
+
+    const status = validator.getGameStatus();
+    setGameState({
+      ...status,
+      turn: newBoard.turn,
+      lastMove: newMoves.length > 0 ? { 
+        from: newMoves[newMoves.length - 1].from, 
+        to: newMoves[newMoves.length - 1].to 
+      } : null,
+    });
+  }, [moves, botThinking]);
+
+  // Arrow key navigation for viewing board history
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setViewIndex(prev => Math.max(-1, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setViewIndex(prev => Math.min(moves.length - 1, prev + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [moves.length]);
+
+  // Get board state for viewing (either current or from history)
+  const getDisplayBoard = useCallback(() => {
+    if (viewIndex === -1) {
+      return board; // Current game state
+    }
+
+    // Rebuild board up to viewIndex
+    const newBoard = new Board();
+    const validator = new MoveValidator(newBoard);
+    
+    for (let i = 0; i <= viewIndex && i < moves.length; i++) {
+      const move = moves[i];
+      validator.makeMove(newBoard, move.from, move.to, move.promotion);
+    }
+
+    return newBoard;
+  }, [board, viewIndex, moves]);
+
   // Loading state while checking for existing game
   if (isInitializing) {
     return (
@@ -564,6 +629,13 @@ function BotGame() {
         </div>
       )}
 
+      {/* Viewing History Indicator */}
+      {viewIndex >= 0 && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg z-40">
+          Viewing Move {viewIndex + 1} • Use ← → to navigate • Press <strong>Enter</strong> or make a move to return
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_280px] gap-4 h-full">
         {/* Left Sidebar - Bot Info */}
         <div className="space-y-6">
@@ -602,23 +674,31 @@ function BotGame() {
         </div>
 
         {/* Center - Chess Board */}
-        <div className="flex items-center justify-center min-h-0 h-full">
+        <div className="flex flex-col items-center justify-center min-h-0 h-full gap-4">
           <div className="w-full h-full max-w-[min(90vh,90vw)] max-h-[min(90vh,90vw)]">
             <ChessBoard
               gameState={{
-                board: board.board,
-                turn: board.turn,
+                board: getDisplayBoard().board,
+                turn: getDisplayBoard().turn,
                 check: gameState.check,
                 status: gameState.status,
                 winner: gameState.winner,
                 lastMove: gameState.lastMove,
               }}
               onMove={handlePlayerMove}
-              isSpectator={false}
+              isSpectator={viewIndex >= 0 || playerColor !== gameState.turn}
               playerColor={playerColor}
               getValidMoves={getValidMoves}
             />
           </div>
+          <button
+            onClick={handleTakeback}
+            disabled={moves.length === 0 || botThinking}
+            className="px-6 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-all font-semibold flex items-center space-x-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Undo Move</span>
+          </button>
         </div>
 
         {/* Right Sidebar - Player Info & History */}

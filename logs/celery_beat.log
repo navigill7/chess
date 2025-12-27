@@ -1,5 +1,12 @@
-[2025-12-25 16:36:43,398: INFO/MainProcess] beat: Starting...
-[2025-12-25 16:36:45,807: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
-[2025-12-25 16:40:00,219: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
-[2025-12-25 16:45:00,056: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
-[2025-12-25 16:50:00,036: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
+[2025-12-27 14:10:27,802: INFO/MainProcess] beat: Starting...
+[2025-12-27 14:10:30,360: INFO/MainProcess] Scheduler: Sending due task cleanup-stale-matchmaking-queues (game.tasks.cleanup_stale_queues)
+celery beat v5.6.0 (recovery) is starting.
+__    -    ... __   -        _
+LocalTime -> 2025-12-27 14:10:27
+Configuration ->
+    . broker -> redis://localhost:6379/1
+    . loader -> celery.loaders.app.AppLoader
+    . scheduler -> celery.beat.PersistentScheduler
+    . db -> celerybeat-schedule
+    . logfile -> [stderr]@%INFO
+    . maxinterval -> 5.00 minutes (300s)

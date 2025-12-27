@@ -1,14 +1,14 @@
 import { useRef, useCallback } from 'react';
 
 const SOUNDS = {
-  move: '/sounds/move.mp3',
-  capture: '/sounds/capture.mp3',
-  check: '/sounds/check.mp3',
-  castle: '/sounds/castle.mp3',
-  gameStart: '/sounds/game-start.mp3',
-  gameEnd: '/sounds/game-end.mp3',
-  lowTime: '/sounds/low-time.mp3',
-  notification: '/sounds/notification.mp3',
+  move: '/assets/sound/Move.mp3',
+  capture: '/assets/sound/Capture.mp3',
+  check: '/assets/sound/Check.mp3',
+  castle: '/assets/sound/Check.mp3',
+  gameStart: '/assets/sound/Check.mp3',
+  gameEnd: '/assets/sound/Checkmate.mp3',
+  lowTime: '/assets/sound/Check.mp3',
+  notification: '/assets/sound/Capture.mp3',
 };
 
 function useSound() {

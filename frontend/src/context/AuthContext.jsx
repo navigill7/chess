@@ -33,6 +33,15 @@ export function AuthProvider({ children }) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
+    } else {
+      // Set up guest user for non-authenticated players
+      const guestUser = {
+        id: null,
+        username: 'Guest',
+        email: null,
+        isGuest: true
+      };
+      setUser(guestUser);
     }
 
     setLoading(false);
@@ -135,8 +144,15 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);
-    setUser(null);
-    navigate('/login', { replace: true });
+    // Reset to guest user instead of null
+    const guestUser = {
+      id: null,
+      username: 'Guest',
+      email: null,
+      isGuest: true
+    };
+    setUser(guestUser);
+    navigate('/', { replace: true });
   };
 
   const updateUser = (updates) => {
@@ -154,7 +170,7 @@ export function AuthProvider({ children }) {
     googleLogin,
     logout,
     updateUser,
-    isAuthenticated: !!user,
+    isAuthenticated: !!token && !!user && !user.isGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

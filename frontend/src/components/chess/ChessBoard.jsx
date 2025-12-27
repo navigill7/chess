@@ -143,7 +143,7 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
         'rook': 'r', 'queen': 'q', 'king': 'k'
       };
       const typeCode = typeMap[piece.type];
-      return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${colorCode}${typeCode}.png`;
+      return `/assets/pieces/alpha/${colorCode}${typeCode}.svg`;
   };
 
   return (

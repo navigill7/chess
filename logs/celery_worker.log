@@ -1,0 +1,1479 @@
+ 
+ -------------- celery@DESKTOP-UOKK6T4 v5.6.0 (recovery)
+--- ***** ----- 
+-- ******* ---- Windows-11-10.0.26200-SP0 2025-12-27 14:10:29
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         core:0x4f5db80
+- ** ---------- .> transport:   redis://localhost:6379/1
+- ** ---------- .> results:     redis://localhost:6379/1
+- *** --- * --- .> concurrency: 8 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . game.tasks.check_timeout
+  . game.tasks.cleanup_stale_queues
+  . game.tasks.find_match
+  . game.tasks.leave_queue
+
+[2025-12-27 14:10:31,685: INFO/SpawnPoolWorker-4] child process 9996 calling self.run()
+[2025-12-27 14:10:31,692: INFO/SpawnPoolWorker-3] child process 19724 calling self.run()
+[2025-12-27 14:10:31,717: INFO/SpawnPoolWorker-8] child process 18184 calling self.run()
+[2025-12-27 14:10:31,720: INFO/SpawnPoolWorker-5] child process 18968 calling self.run()
+[2025-12-27 14:10:31,725: INFO/SpawnPoolWorker-6] child process 17356 calling self.run()
+[2025-12-27 14:10:31,794: INFO/SpawnPoolWorker-7] child process 3116 calling self.run()
+[2025-12-27 14:10:31,811: INFO/SpawnPoolWorker-2] child process 10992 calling self.run()
+[2025-12-27 14:10:31,820: INFO/SpawnPoolWorker-1] child process 20040 calling self.run()
+[2025-12-27 14:10:32,311: INFO/MainProcess] Connected to redis://localhost:6379/1
+[2025-12-27 14:10:34,357: INFO/MainProcess] mingle: searching for neighbors
+[2025-12-27 14:10:36,101: ERROR/SpawnPoolWorker-1] Pool process <billiard.pool.Worker object at 0x0000000004C6D7C0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:36,101: ERROR/SpawnPoolWorker-1] Pool process <billiard.pool.Worker object at 0x0000000004C6D7C0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:35,907: ERROR/SpawnPoolWorker-4] Pool process <billiard.pool.Worker object at 0x000000000444D580> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:36,000: ERROR/SpawnPoolWorker-2] Pool process <billiard.pool.Worker object at 0x000000000442D490> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:35,907: ERROR/SpawnPoolWorker-4] Pool process <billiard.pool.Worker object at 0x000000000444D580> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:36,000: ERROR/SpawnPoolWorker-2] Pool process <billiard.pool.Worker object at 0x000000000442D490> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:36,862: ERROR/MainProcess] Process 'SpawnPoolWorker-4' pid:21612 exited with 'exitcode 1'
+[2025-12-27 14:10:36,862: ERROR/MainProcess] Process 'SpawnPoolWorker-2' pid:12268 exited with 'exitcode 1'
+[2025-12-27 14:10:36,862: ERROR/MainProcess] Process 'SpawnPoolWorker-1' pid:6172 exited with 'exitcode 1'
+[2025-12-27 14:10:37,921: INFO/SpawnPoolWorker-10] child process 18264 calling self.run()
+[2025-12-27 14:10:37,926: INFO/SpawnPoolWorker-11] child process 21096 calling self.run()
+[2025-12-27 14:10:37,932: INFO/SpawnPoolWorker-9] child process 6776 calling self.run()
+[2025-12-27 14:10:40,538: ERROR/SpawnPoolWorker-11] Pool process <billiard.pool.Worker object at 0x000000000435D3D0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:40,538: ERROR/SpawnPoolWorker-11] Pool process <billiard.pool.Worker object at 0x000000000435D3D0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:40,896: ERROR/MainProcess] Process 'SpawnPoolWorker-11' pid:13812 exited with 'exitcode 1'
+[2025-12-27 14:10:41,622: INFO/MainProcess] mingle: all alone
+[2025-12-27 14:10:41,672: INFO/SpawnPoolWorker-12] child process 18128 calling self.run()
+[2025-12-27 14:10:51,932: INFO/MainProcess] celery@DESKTOP-UOKK6T4 ready.
+[2025-12-27 14:10:52,017: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[3ba1a371-45b9-45ed-bf42-89b32e3027ae] received
+[2025-12-27 14:10:52,019: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[24d2298a-4bb0-4e64-8021-386c9039011c] received
+[2025-12-27 14:10:52,021: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[c838d178-ccd7-4118-9d65-b2b082a207d8] received
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-9] Pool process <billiard.pool.Worker object at 0x0000000004CED640> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-9] Pool process <billiard.pool.Worker object at 0x0000000004CED640> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,023: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[22844b9d-86df-4fc2-85d8-1b066710b57b] received
+[2025-12-27 14:10:52,025: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[68684894-be4b-496e-84b7-5841a5753662] received
+[2025-12-27 14:10:52,026: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[e5c66a61-29dd-49ea-9437-1f41cf1e4f93] received
+[2025-12-27 14:10:52,028: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[7eb2f0b0-3c5f-45f8-bad3-f11bc9cd7d9a] received
+[2025-12-27 14:10:52,029: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[188664f9-dcf8-4783-920b-3231f7b63a84] received
+[2025-12-27 14:10:52,031: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[301167bd-b12d-4e01-89a2-a274b60cf8a9] received
+[2025-12-27 14:10:52,107: ERROR/MainProcess] Process 'SpawnPoolWorker-9' pid:20680 exited with 'exitcode 1'
+[2025-12-27 14:10:52,117: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[1eb85be6-e6eb-4b80-a77c-69b9ca3d0d45] received
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-8] Pool process <billiard.pool.Worker object at 0x0000000004C7D790> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 353, in _recv_bytes
+    result = self._get_more_data(ov, maxsize)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 377, in _get_more_data
+    assert left > 0
+           ^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-8] Pool process <billiard.pool.Worker object at 0x0000000004C7D790> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 353, in _recv_bytes
+    result = self._get_more_data(ov, maxsize)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 377, in _get_more_data
+    assert left > 0
+           ^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-6] Pool process <billiard.pool.Worker object at 0x000000000449D4C0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 353, in _recv_bytes
+    result = self._get_more_data(ov, maxsize)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 377, in _get_more_data
+    assert left > 0
+           ^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-7] Pool process <billiard.pool.Worker object at 0x000000000449D700> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 353, in _recv_bytes
+    result = self._get_more_data(ov, maxsize)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 377, in _get_more_data
+    assert left > 0
+           ^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-6] Pool process <billiard.pool.Worker object at 0x000000000449D4C0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 353, in _recv_bytes
+    result = self._get_more_data(ov, maxsize)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 377, in _get_more_data
+    assert left > 0
+           ^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,018: ERROR/SpawnPoolWorker-7] Pool process <billiard.pool.Worker object at 0x000000000449D700> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 353, in _recv_bytes
+    result = self._get_more_data(ov, maxsize)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\connection.py", line 377, in _get_more_data
+    assert left > 0
+           ^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:52,910: INFO/SpawnPoolWorker-13] child process 9232 calling self.run()
+[2025-12-27 14:10:52,916: ERROR/MainProcess] Process 'SpawnPoolWorker-8' pid:22484 exited with 'exitcode 1'
+[2025-12-27 14:10:52,916: ERROR/MainProcess] Process 'SpawnPoolWorker-7' pid:14636 exited with 'exitcode 1'
+[2025-12-27 14:10:52,916: ERROR/MainProcess] Process 'SpawnPoolWorker-6' pid:18856 exited with 'exitcode 1'
+[2025-12-27 14:10:52,946: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[c7eb34e6-6038-49f3-947d-6e90106b9684] received
+[2025-12-27 14:10:52,949: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[2300d9c7-c20f-46ab-a2f3-715604d7be29] received
+[2025-12-27 14:10:52,951: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[abc1b331-68b0-4ecf-a9d4-a4dec351d1e6] received
+[2025-12-27 14:10:53,801: INFO/SpawnPoolWorker-14] child process 18736 calling self.run()
+[2025-12-27 14:10:53,809: INFO/SpawnPoolWorker-15] child process 22308 calling self.run()
+[2025-12-27 14:10:53,822: INFO/SpawnPoolWorker-16] child process 12768 calling self.run()
+[2025-12-27 14:10:55,476: ERROR/SpawnPoolWorker-13] Pool process <billiard.pool.Worker object at 0x00000000043ED790> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:55,476: ERROR/SpawnPoolWorker-13] Pool process <billiard.pool.Worker object at 0x00000000043ED790> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:56,146: ERROR/MainProcess] Process 'SpawnPoolWorker-13' pid:20664 exited with 'exitcode 1'
+[2025-12-27 14:10:56,158: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[ca9f386c-7e31-4b50-bce2-065e55e8df6a] received
+[2025-12-27 14:10:56,254: ERROR/SpawnPoolWorker-14] Pool process <billiard.pool.Worker object at 0x000000000443D400> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:56,254: ERROR/SpawnPoolWorker-14] Pool process <billiard.pool.Worker object at 0x000000000443D400> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:56,279: ERROR/SpawnPoolWorker-16] Pool process <billiard.pool.Worker object at 0x0000000004BCD460> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:56,279: ERROR/SpawnPoolWorker-16] Pool process <billiard.pool.Worker object at 0x0000000004BCD460> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:56,870: INFO/SpawnPoolWorker-17] child process 6672 calling self.run()
+[2025-12-27 14:10:56,957: ERROR/MainProcess] Process 'SpawnPoolWorker-16' pid:21480 exited with 'exitcode 1'
+[2025-12-27 14:10:56,957: ERROR/MainProcess] Process 'SpawnPoolWorker-14' pid:9540 exited with 'exitcode 1'
+[2025-12-27 14:10:56,977: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[7a9d7be8-697d-42b5-aed4-9b793d670829] received
+[2025-12-27 14:10:56,979: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[24324f73-09c5-459e-8fcd-66100a53aea6] received
+[2025-12-27 14:10:57,847: INFO/SpawnPoolWorker-18] child process 12684 calling self.run()
+[2025-12-27 14:10:57,971: INFO/SpawnPoolWorker-19] child process 17592 calling self.run()
+[2025-12-27 14:10:59,413: ERROR/SpawnPoolWorker-17] Pool process <billiard.pool.Worker object at 0x000000000443D520> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:10:59,413: ERROR/SpawnPoolWorker-17] Pool process <billiard.pool.Worker object at 0x000000000443D520> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:00,177: ERROR/MainProcess] Process 'SpawnPoolWorker-17' pid:4872 exited with 'exitcode 1'
+[2025-12-27 14:11:00,184: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[afeed328-2054-44de-9ac6-bfddb6c1e526] received
+[2025-12-27 14:11:00,585: ERROR/SpawnPoolWorker-19] Pool process <billiard.pool.Worker object at 0x000000000431D370> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:00,585: ERROR/SpawnPoolWorker-19] Pool process <billiard.pool.Worker object at 0x000000000431D370> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:00,984: ERROR/MainProcess] Process 'SpawnPoolWorker-19' pid:15076 exited with 'exitcode 1'
+[2025-12-27 14:11:01,016: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[6ac2b3fb-c603-4a1b-9ef9-9dab8ffd0951] received
+[2025-12-27 14:11:01,632: INFO/SpawnPoolWorker-20] child process 9736 calling self.run()
+[2025-12-27 14:11:02,191: INFO/SpawnPoolWorker-21] child process 4088 calling self.run()
+[2025-12-27 14:11:03,916: ERROR/SpawnPoolWorker-20] Pool process <billiard.pool.Worker object at 0x000000000458D4F0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:03,916: ERROR/SpawnPoolWorker-20] Pool process <billiard.pool.Worker object at 0x000000000458D4F0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:04,217: ERROR/MainProcess] Process 'SpawnPoolWorker-20' pid:22044 exited with 'exitcode 1'
+[2025-12-27 14:11:04,230: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[994ebad4-41e9-4ad5-9f36-53ead057223e] received
+[2025-12-27 14:11:04,643: ERROR/SpawnPoolWorker-21] Pool process <billiard.pool.Worker object at 0x0000000004B7CAA0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:04,643: ERROR/SpawnPoolWorker-21] Pool process <billiard.pool.Worker object at 0x0000000004B7CAA0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:05,028: ERROR/MainProcess] Process 'SpawnPoolWorker-21' pid:18676 exited with 'exitcode 1'
+[2025-12-27 14:11:05,042: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[9c67bf5e-86de-425f-8d89-9f4f84018a10] received
+[2025-12-27 14:11:05,161: INFO/SpawnPoolWorker-22] child process 14620 calling self.run()
+[2025-12-27 14:11:05,906: INFO/SpawnPoolWorker-23] child process 17700 calling self.run()
+[2025-12-27 14:11:08,788: ERROR/SpawnPoolWorker-23] Pool process <billiard.pool.Worker object at 0x00000000043DD4C0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:08,788: ERROR/SpawnPoolWorker-23] Pool process <billiard.pool.Worker object at 0x00000000043DD4C0> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+                 ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+                       ^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\synchronize.py", line 115, in __enter__
+    return self._semlock.__enter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+          ^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-27 14:11:09,044: ERROR/MainProcess] Process 'SpawnPoolWorker-23' pid:320 exited with 'exitcode 1'
+[2025-12-27 14:11:09,066: INFO/MainProcess] Task game.tasks.cleanup_stale_queues[04c5be8f-6cd8-4724-a350-db05c329393e] received
+[2025-12-27 14:11:09,920: INFO/SpawnPoolWorker-24] child process 5396 calling self.run()
+[2025-12-27 14:12:44,445: ERROR/MainProcess] Process 'SpawnPoolWorker-24' pid:18532 exited with 'exitcode 143'
+[2025-12-27 14:12:44,445: ERROR/MainProcess] Process 'SpawnPoolWorker-22' pid:1500 exited with 'exitcode 143'
+[2025-12-27 14:12:44,445: ERROR/MainProcess] Process 'SpawnPoolWorker-18' pid:3396 exited with 'exitcode 143'
+[2025-12-27 14:12:44,445: ERROR/MainProcess] Process 'SpawnPoolWorker-15' pid:18388 exited with 'exitcode 143'
+[2025-12-27 14:12:44,446: ERROR/MainProcess] Process 'SpawnPoolWorker-12' pid:17576 exited with 'exitcode 143'
+[2025-12-27 14:12:44,446: ERROR/MainProcess] Process 'SpawnPoolWorker-10' pid:6192 exited with 'exitcode 143'
+[2025-12-27 14:12:44,446: ERROR/MainProcess] Process 'SpawnPoolWorker-5' pid:22124 exited with 'exitcode 143'
+
+worker: Hitting Ctrl+C again will initiate cold shutdown, terminating all running tasks!
+
+worker: Warm shutdown (MainProcess)
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+    new_handle = steal_handle(parent_pid, pipe_handle)
+    new_handle = steal_handle(parent_pid, pipe_handle)
+    new_handle = steal_handle(parent_pid, pipe_handle)
+    new_handle = steal_handle(parent_pid, pipe_handle)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+    new_handle = steal_handle(parent_pid, pipe_handle)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+    new_handle = steal_handle(parent_pid, pipe_handle)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+    source_process_handle = _winapi.OpenProcess(
+    source_process_handle = _winapi.OpenProcess(
+    source_process_handle = _winapi.OpenProcess(
+                            ^^^^^^^^^^^^^^^^^^^^
+    source_process_handle = _winapi.OpenProcess(
+    source_process_handle = _winapi.OpenProcess(
+    source_process_handle = _winapi.OpenProcess(
+                            ^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 87] The parameter is incorrect
+                            ^^^^^^^^^^^^^^^^^^^^
+                            ^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 87] The parameter is incorrect
+                            ^^^^^^^^^^^^^^^^^^^^
+                            ^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 87] The parameter is incorrect
+OSError: [WinError 87] The parameter is incorrect
+OSError: [WinError 87] The parameter is incorrect
+OSError: [WinError 87] The parameter is incorrect
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\spawn.py", line 158, in spawn_main
+    new_handle = steal_handle(parent_pid, pipe_handle)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\chess coding\server\.venv\Lib\site-packages\billiard\reduction.py", line 119, in steal_handle
+    source_process_handle = _winapi.OpenProcess(
+                            ^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 87] The parameter is incorrect
