@@ -4,17 +4,47 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 function MoveHistory({ moves, currentMoveIndex, onMoveClick }) {
   const movesEndRef = useRef(null);
   const activeRef = useRef(null);
+  const containerRef = useRef(null); // NEW: Container reference
 
   useEffect(() => {
+    // FIXED: Only scroll the move history container, not the whole page
     if (currentMoveIndex === moves.length - 1) {
-      movesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else if (activeRef.current) {
-      activeRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Scroll the container, not the page
+      if (containerRef.current && movesEndRef.current) {
+        const container = containerRef.current;
+        const element = movesEndRef.current;
+        
+        // Calculate scroll position within container only
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        
+        if (elementRect.bottom > containerRect.bottom || elementRect.top < containerRect.top) {
+          element.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'nearest',  // KEY FIX: Use 'nearest' instead of 'end' or 'start'
+            inline: 'nearest'
+          });
+        }
+      }
+    } else if (activeRef.current && containerRef.current) {
+      // Only scroll if element is outside visible area
+      const container = containerRef.current;
+      const element = activeRef.current;
+      
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      
+      if (elementRect.bottom > containerRect.bottom || elementRect.top < containerRect.top) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest',  // KEY FIX
+          inline: 'nearest'
+        });
+      }
     }
   }, [currentMoveIndex, moves.length]);
 
   const formatMove = (move) => {
-    // Use provided notation or construct simple notation
     if (move.notation) return move.notation;
     return `${move.from}-${move.to}`;
   };
@@ -58,7 +88,15 @@ function MoveHistory({ moves, currentMoveIndex, onMoveClick }) {
     <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 p-4 flex flex-col h-full">
       <h3 className="text-white font-semibold mb-3">Move History</h3>
       
-      <div className="flex-1 overflow-y-auto space-y-1 mb-3 min-h-0">
+      {/* NEW: Add ref to container and prevent it from causing page scroll */}
+      <div 
+        ref={containerRef}
+        className="flex-1 overflow-y-auto space-y-1 mb-3 min-h-0"
+        style={{ 
+          scrollBehavior: 'smooth',
+          overscrollBehavior: 'contain'  // KEY FIX: Prevent scroll from bubbling to parent
+        }}
+      >
         {movePairs.length === 0 ? (
           <p className="text-white/40 text-sm text-center py-8">No moves yet</p>
         ) : (

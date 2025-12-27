@@ -68,6 +68,23 @@ function BotGame() {
     }
   }, [urlGameId, gameLoaded]);
 
+
+  useEffect(() => {
+    // Save scroll position before move
+    const savedScrollY = window.scrollY;
+    
+    // Prevent auto-scroll to focused elements
+    const preventAutoScroll = (e) => {
+      window.scrollTo(0, savedScrollY);
+    };
+    
+    window.addEventListener('scroll', preventAutoScroll, { passive: false });
+    
+    return () => {
+      window.removeEventListener('scroll', preventAutoScroll);
+    };
+  }, []);
+
   const loadExistingGame = async (gId) => {
     setIsInitializing(true);
     try {
