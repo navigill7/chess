@@ -36,7 +36,9 @@
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   border: 2px solid #1a1714;
-  background: #312e2b;
+  background-image: url('/assets/board/brown.svg');
+  background-size: cover;
+  background-position: center;
   border-radius: 0.5rem;
   overflow: hidden;
 }

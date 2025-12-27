@@ -137,14 +137,14 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
   };
 
   const getPieceImage = (piece) => {
-      const colorCode = piece.color === 'white' ? 'w' : 'b';
-      const typeMap = {
-        'pawn': 'p', 'knight': 'n', 'bishop': 'b',
-        'rook': 'r', 'queen': 'q', 'king': 'k'
-      };
-      const typeCode = typeMap[piece.type];
-      return `/assets/pieces/alpha/${colorCode}${typeCode}.svg`;
-  };
+    const colorCode = piece.color === 'white' ? 'w' : 'b';
+    const typeMap = {
+      'pawn': 'P', 'knight': 'N', 'bishop': 'B',
+      'rook': 'R', 'queen': 'Q', 'king': 'K'
+    };
+    const typeCode = typeMap[piece.type];
+    return `/assets/pieces/alpha/${colorCode}${typeCode}.svg`;
+};
 
   return (
     <div className="chess-board-container" ref={boardRef}>
@@ -192,7 +192,12 @@ function ChessBoard({ gameState, onMove, isSpectator, playerColor, getValidMoves
                         src={getPieceImage(piece)} 
                         alt={`${piece.color} ${piece.type}`}
                         draggable={false}
-                        style={{ pointerEvents: 'none' }}
+                        style={{ 
+                          pointerEvents: 'none',
+                          width: '80%',
+                          height: '80%',
+                          objectFit: 'contain'
+                        }}
                       />
                     </div>
                   )}
